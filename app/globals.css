@@ -106,7 +106,7 @@ body {
   content: '';
   position: absolute;
   inset: -1px;
-  background: linear-gradient(180deg, rgba(22, 163, 74, 0.5) 0%, rgba(22, 163, 74, 0.15) 100%);
+  /* background: linear-gradient(180deg, rgba(22, 163, 74, 0.5) 0%, rgba(22, 163, 74, 0.15) 100%); */
   z-index: -1;
 }
 

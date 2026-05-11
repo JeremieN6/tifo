@@ -1,6 +1,9 @@
+'use client';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 export default function CTASection() {
+  const { data: session } = useSession();
   return (
     <section className="relative z-10 overflow-hidden py-32 md:py-48">
       {/* Radial gradient background */}
@@ -54,7 +57,7 @@ export default function CTASection() {
 
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="/auth/register"
+            href={session ? '/dashboard' : '/auth/register'}
             className="group relative overflow-hidden bg-green-700 px-8 py-4 font-body text-sm font-black uppercase tracking-[0.25em] text-white transition-all duration-300 hover:bg-green-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
           >
             <span aria-hidden="true" className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-full" />

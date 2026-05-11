@@ -84,8 +84,8 @@ export default function PricingSection() {
         >
           <span aria-hidden="true" className="h-2 w-2 rounded-full bg-green-500 cta-pulse" />
           <p className="font-body text-sm font-semibold text-green-400">
-            <span className="font-black text-white">Tarifs de lancement actifs.</span>{' '}
-            Les plans payants sont réservés aux premiers clients et passent par un checkout Stripe sécurisé.
+            <span className="font-black text-white">Tarifs de lancement en vigueur.</span>{' '}
+            Les offres payantes sont réservées aux premiers clients et sont accessibles via un paiement sécurisé.
           </p>
         </div>
 
@@ -177,7 +177,7 @@ export default function PricingSection() {
         </div>
 
         <p className="mt-6 text-center font-body text-xs uppercase tracking-[0.18em] text-slate-500">
-          Le checkout Stripe hébergé regroupe les offres Pro et Club.
+          L'offres PRO contient les fonctionnalités du plan STARTER, et l'offre CLUB contient celles de PRO. <br /> Pas de surprise, juste plus de possibilités à mesure que vous montez en gamme.
         </p>
       </div>
       <div className="section-divider mt-24 md:mt-32" />
