@@ -47,85 +47,205 @@ export default function DashboardPage() {
     a.click();
   }
 
-  const planLabel: Record<string, string> = {
-    starter: 'Starter (Gratuit)',
-    pro: 'Pro',
-    club: 'Club',
-  };
-
   const isUnlimited = quota?.quota_total === 999999;
 
   return (
     <div className="min-h-screen bg-[#020f07]">
+      <div className="stadium-glow pointer-events-none fixed inset-0 z-0"></div>
+      <div className="specific-background pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.14),transparent_42%),radial-gradient(circle_at_85%_15%,rgba(255,255,255,0.06),transparent_20%)]" />
       <Navbar />
       <main className="mx-auto max-w-6xl px-6 pb-16 pt-28 md:px-12">
-        {/* Header */}
-        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-display text-4xl uppercase text-white">Tableau de bord</h1>
-            <p className="text-gray-400 mt-1">Bienvenue, {session?.user?.name ?? session?.user?.email}</p>
-          </div>
-          <Link
-            href="/create"
-            className="rounded-md bg-green-500 px-6 py-3 text-sm font-semibold text-black hover:bg-green-400 transition-colors text-center"
-          >
-            + Créer une affiche
-          </Link>
-        </div>
 
-        {/* Quota card */}
-        {quota && (
-          <div className="mb-10 rounded-xl border border-green-900/30 bg-green-950/10 p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Plan actuel</p>
-                <p className="text-xl font-semibold text-white capitalize">{planLabel[quota.plan] ?? quota.plan}</p>
+        {/* Hero card */}
+        <div className="mb-8 p-8 md:p-10" style={{ background: 'rgba(5,46,22,0.15)', border: '1px solid rgba(22,163,74,0.2)' }}>
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-[1fr_300px]">
+
+            {/* Left col */}
+            <div>
+              <div className="badge-beta mb-5 rounded-lg inline-flex items-center gap-2 px-3 py-1.5 font-body text-xs font-bold uppercase tracking-[0.2em]">
+                Dashboard utilisateur
               </div>
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Affiches restantes ce mois</p>
-                <p className="text-3xl font-display text-green-400">
-                  {isUnlimited ? '∞' : `${quota.quota_remaining} / ${quota.quota_total}`}
+              <h1
+                className="font-display uppercase leading-[0.9] text-white"
+                style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', letterSpacing: '-0.02em' }}
+              >
+                Vos affiches,<br />
+                <span className="text-gradient-green">prêts à jouer</span>
+              </h1>
+              <p className="mt-4 max-w-sm font-body text-sm leading-relaxed text-slate-400">
+                Suivez vos créations récentes, votre quota actif et votre plan Tifo sans quitter le terrain.
+              </p>
+
+              {/* 3 stat cards */}
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+                {/* Plan actuel */}
+                <div className="p-4" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.15)' }}>
+                  <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Plan actuel</p>
+                  <p className="mt-1 font-display text-2xl uppercase text-white">
+                    {quota?.plan === 'starter' ? 'Gratuit' : (quota?.plan ?? '—')}
+                  </p>
+                  <div className="badge-beta mt-2 inline-block px-2 py-0.5 font-body text-[9px] font-bold uppercase tracking-wider">
+                    Accès bêta
+                  </div>
+                  <p className="mt-3 font-body text-xs leading-relaxed text-slate-500">
+                    Pour lancer vos premiers visuels et tester la création d&apos;affiches avec Tifo.
+                  </p>
+                  <Link
+                    href="/#pricing"
+                    className="mt-4 block w-full bg-green-700 px-3 py-2 text-center font-body text-xs font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
+                  >
+                    Upgrade vers Pro
+                  </Link>
+                </div>
+
+                {/* Quota */}
+                <div className="p-4" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.15)' }}>
+                  <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Quota de mois-ci</p>
+                  <p className="mt-1 font-display text-5xl text-white">
+                    {isUnlimited ? '∞' : (quota?.quota_remaining ?? '—')}
+                  </p>
+                  <p className="font-body text-xs text-slate-500">
+                    {isUnlimited ? 'illimitées' : `restantes sur ${quota?.quota_total ?? 5}`}
+                  </p>
+                  <p className="mt-3 font-body text-xs text-slate-500">
+                    {quota && !isUnlimited ? `${quota.quota_total - quota.quota_remaining}/${quota.quota_total} utilisées` : ''}
+                  </p>
+                </div>
+
+                {/* Activité */}
+                <div className="p-4" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.15)' }}>
+                  <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Activité récente</p>
+                  <p className="mt-1 font-display text-5xl text-white">{posters.length}</p>
+                  <p className="font-body text-xs text-slate-500">
+                    affiche{posters.length !== 1 ? 's' : ''} récente{posters.length !== 1 ? 's' : ''}
+                  </p>
+                  <div className="mt-3 grid grid-cols-3 gap-1">
+                    <div>
+                      <p className="font-display text-xl text-white">{posters.length}</p>
+                      <p className="font-body text-[9px] uppercase tracking-wider text-slate-600">Générées</p>
+                    </div>
+                    <div>
+                      <p className="font-display text-xl text-white">{new Date().getDate()}</p>
+                      <p className="font-body text-[9px] uppercase tracking-wider text-slate-600">
+                        {new Date().toLocaleString('fr-FR', { month: 'short' }).toUpperCase()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-display text-xl text-white">{new Date().getFullYear()}</p>
+                      <p className="font-body text-[9px] uppercase tracking-wider text-slate-600">Visite</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right col */}
+            <div className="flex flex-col gap-4">
+              {/* Connected as */}
+              <div className="p-5" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.15)' }}>
+                <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-600">Connecté en tant que</p>
+                <p className="mt-2 break-all font-body text-sm font-semibold text-white">{session?.user?.email}</p>
+                <p className="font-body text-xs text-slate-500">
+                  Période active : {new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
                 </p>
               </div>
-              {!isUnlimited && (
-                <div className="sm:text-right">
-                  <Link href="/#pricing" className="rounded-md border border-green-500/40 px-4 py-2 text-sm text-green-400 hover:bg-green-900/20 transition-colors">
-                    Passer au Pro →
+
+              {/* Upgrade panel */}
+              {(quota?.plan === 'starter' || !quota) && (
+                <div className="flex-1 p-5" style={{ background: 'rgba(5,46,22,0.25)', border: '1px solid rgba(22,163,74,0.3)' }}>
+                  <div className="mb-3 flex items-start justify-between">
+                    <div>
+                      <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-600">Upgrade conseillé</p>
+                      <p className="font-display text-3xl uppercase text-white">Pro</p>
+                    </div>
+                    <div className="badge-beta rounded-lg px-2 py-0.5 font-body text-[9px] font-bold uppercase tracking-wider">Plan supérieur</div>
+                  </div>
+                  <p className="font-body text-xs text-slate-400">
+                    Pour les créateurs et journalistes qui publient régulièrement.
+                  </p>
+                  <ul className="mt-4 space-y-2">
+                    {['Affiches illimitées', 'Tous les formats réseaux', 'Sans filigrane', 'Export PNG + JPG HD'].map((f) => (
+                      <li
+                        key={f}
+                        className="flex items-center gap-2 p-2.5 relative border border-green-900/40"
+                        style={{ background: 'rgba(22,163,74,0.08)', border: '1px solid rgba(22,163,74,0.15)' }}
+                      >
+                        <svg className="h-3.5 w-3.5 shrink-0 text-green-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 16 16">
+                          <path d="M13 4L6 11L3 8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="font-body text-xs text-slate-300">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/#pricing"
+                    className="mt-5 block w-full bg-green-700 py-2.5 text-center font-body text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-green-600 transition-colors"
+                  >
+                    Upgrade vers Pro
                   </Link>
                 </div>
               )}
             </div>
-
-            {!isUnlimited && quota.quota_total > 0 && (
-              <div className="mt-4">
-                <div className="h-2 w-full rounded-full bg-green-950">
-                  <div
-                    className="h-2 rounded-full bg-green-500 transition-all"
-                    style={{ width: `${(quota.quota_remaining / quota.quota_total) * 100}%` }}
-                  />
-                </div>
-              </div>
-            )}
           </div>
-        )}
+        </div>
 
-        {/* Poster history */}
+        {/* History section */}
         <div>
-          <h2 className="font-display text-2xl uppercase text-white mb-6">Mes affiches</h2>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <div className="mb-1 flex items-center gap-2">
+                <div className="h-px w-6 bg-green-600" />
+                <p className="font-body text-xs font-bold uppercase tracking-[0.3em] text-green-600">Historique</p>
+              </div>
+              <h2 className="font-display text-2xl uppercase text-white">Affiches générées</h2>
+            </div>
+            <Link
+              href="/create"
+              className="px-4 py-2.5 font-body text-xs font-black uppercase tracking-[0.2em] text-white transition-colors hover:bg-green-900/20"
+              style={{ border: '1px solid rgba(22,163,74,0.3)' }}
+            >
+              Générer un nouveau visuel
+            </Link>
+          </div>
 
           {loading ? (
-            <div className="text-gray-500 text-center py-12">Chargement…</div>
+            <div
+              className="p-12 text-center font-body text-sm text-slate-500"
+              style={{ background: 'rgba(5,46,22,0.1)', border: '1px solid rgba(22,163,74,0.1)' }}
+            >
+              Chargement…
+            </div>
           ) : posters.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-green-900/30 py-16 text-center">
-              <p className="text-gray-500">Tu n'as pas encore créé d'affiche.</p>
-              <Link href="/create" className="mt-4 inline-block text-green-400 hover:text-green-300 text-sm">
-                Créer ta première affiche →
+            <div
+              className="flex flex-col items-center py-16"
+              style={{ background: 'rgba(5,46,22,0.1)', border: '1px solid rgba(22,163,74,0.1)' }}
+            >
+              <div
+                className="flex h-14 w-14 items-center justify-center"
+                style={{ border: '2px solid rgba(22,163,74,0.4)', background: 'rgba(22,163,74,0.1)' }}
+              >
+                <span className="font-display text-2xl text-green-500">0</span>
+              </div>
+              <p className="mt-4 font-display text-xl uppercase text-white">Aucune affiche générée</p>
+              <p className="mt-2 font-body text-sm text-slate-400">
+                Votre historique apparaîtra ici avec miniature et date dès votre première génération.
+              </p>
+              <Link
+                href="/create"
+                className="mt-6 bg-green-700 px-6 py-2.5 font-body text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-green-600 transition-colors"
+              >
+                Créer ma première affiche
               </Link>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {posters.map((poster) => (
-                <div key={poster.id} className="group relative rounded-xl border border-green-900/20 bg-green-950/10 overflow-hidden hover:border-green-500/30 transition-colors">
+                <div
+                  key={poster.id}
+                  className="card-hover transition-all duration-300"
+                  style={{ background: 'rgba(5,46,22,0.15)', border: '1px solid rgba(22,163,74,0.12)' }}
+                >
                   {(poster.image_url ?? poster.image_data) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -134,23 +254,24 @@ export default function DashboardPage() {
                       className="w-full aspect-[2/3] object-cover"
                     />
                   ) : (
-                    <div className="w-full aspect-[2/3] bg-green-950/20 flex items-center justify-center text-gray-600 text-sm">
+                    <div className="flex w-full aspect-[2/3] items-center justify-center font-body text-sm text-slate-600">
                       Image indisponible
                     </div>
                   )}
                   <div className="p-3">
-                    <p className="text-xs text-gray-500 truncate">
+                    <p className="truncate font-body text-xs text-slate-400">
                       {poster.settings?.homeTeam && poster.settings?.awayTeam
                         ? `${poster.settings.homeTeam} vs ${poster.settings.awayTeam}`
                         : 'Affiche sans titre'}
                     </p>
-                    <p className="text-xs text-gray-600 mt-0.5">
+                    <p className="mt-0.5 font-body text-xs text-slate-600">
                       {new Date(poster.created_at).toLocaleDateString('fr-FR')}
                     </p>
                     {(poster.image_url ?? poster.image_data) && (
                       <button
                         onClick={() => downloadPoster(poster)}
-                        className="mt-2 w-full rounded border border-green-900/40 py-1.5 text-xs text-gray-400 hover:border-green-500/40 hover:text-white transition-colors"
+                        className="mt-2 w-full py-1.5 font-body text-xs text-slate-400 hover:text-white transition-colors"
+                        style={{ border: '1px solid rgba(22,163,74,0.2)' }}
                       >
                         Télécharger
                       </button>

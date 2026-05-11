@@ -1,4 +1,7 @@
-import { Pool } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+
+// Use HTTP/fetch instead of WebSocket for Next.js App Router compatibility
+neonConfig.poolQueryViaFetch = true;
 
 declare global {
   // eslint-disable-next-line no-var
