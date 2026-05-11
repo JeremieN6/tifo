@@ -1,106 +1,186 @@
 'use client';
 import Link from 'next/link';
 
+const checkIcon = (
+  <svg aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 16 16">
+    <path d="M13 4L6 11L3 8" />
+  </svg>
+);
+
+const crossIcon = (
+  <svg aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-slate-600" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 16 16">
+    <path d="M12 4L4 12M4 4l8 8" />
+  </svg>
+);
+
 const plans = [
   {
     name: 'Starter',
-    price: 'Gratuit',
-    description: 'Pour découvrir Tifo',
-    features: ['5 affiches/mois', 'Tous les styles', 'Téléchargement inclus', 'Support communautaire'],
-    cta: 'Commencer gratuitement',
+    price: '0€',
+    label: 'Offert au lancement pour les 200 premiers comptes',
+    description: 'Pour tester Tifo, publier vos premiers visuels et lancer votre processus de création.',
+    features: [
+      { text: '5 affiches / mois', included: true },
+      { text: 'Formats standard (1:1, 16:9)', included: true },
+      { text: 'Tous types de match', included: true },
+      { text: 'Filigrane Tifo', included: true },
+      { text: 'Export JPG', included: true },
+      { text: 'Format story verticale', included: false },
+      { text: 'Sans filigrane', included: false },
+      { text: 'Support prioritaire', included: false },
+    ],
+    cta: 'Créer un compte',
     href: '/auth/register',
     highlighted: false,
   },
   {
     name: 'Pro',
     price: '9€',
-    period: '/mois',
-    description: 'Pour les créateurs actifs',
-    features: ['Affiches illimitées', 'Formats HD', 'Image de référence', 'Support prioritaire'],
-    cta: 'Passer au Pro',
-    hrefEnv: 'NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO',
+    label: 'Prix de lancement — 100 premiers clients',
+    description: 'Pour les créateurs et journalistes qui publient régulièrement.',
+    features: [
+      { text: 'Affiches illimitées', included: true },
+      { text: 'Tous les formats réseaux', included: true },
+      { text: 'Sans filigrane', included: true },
+      { text: 'Export PNG + JPG HD', included: true },
+      { text: 'Personnalisation avancée', included: true },
+      { text: 'Support email prioritaire', included: true },
+      { text: 'Multi-équipes', included: false },
+      { text: 'Export personnalisé', included: false },
+    ],
+    cta: 'Choisir Pro',
+    href: '/checkout/pro',
     highlighted: true,
   },
   {
     name: 'Club',
     price: '29€',
-    period: '/mois',
-    description: 'Pour les clubs et équipes',
-    features: ['Affiches illimitées', 'Accès prioritaire IA', 'Logo club auto', 'Support dédié'],
-    cta: 'Passer au Club',
-    hrefEnv: 'NEXT_PUBLIC_STRIPE_PAYMENT_LINK_CLUB',
+    label: 'Prix de lancement — 50 premiers clubs',
+    description: 'Pour les clubs, médias régionaux et agences avec plusieurs équipes.',
+    features: [
+      { text: 'Tout ce qu\'il y a dans Pro', included: true },
+      { text: 'Multi-équipes / Multi-compétitions', included: true },
+      { text: 'Palette couleur personnalisée', included: true },
+      { text: 'Export formats custom', included: true },
+      { text: 'Intégration flux RSS/API', included: true },
+      { text: 'Support dédié', included: true },
+    ],
+    cta: 'Choisir Club',
+    href: '/checkout/club',
     highlighted: false,
   },
 ];
 
 export default function PricingSection() {
   return (
-    <section id="pricing" className="px-6 py-24 md:px-12">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-16 text-center">
-          <h2 className="font-display text-5xl uppercase tracking-tight text-white">Tarifs</h2>
-          <p className="mt-4 text-gray-400">Simple, transparent, sans engagement.</p>
+    <section className="relative z-10 py-24 md:py-32" id="pricing">
+      <div className="section-divider" />
+      <div className="mx-auto max-w-7xl px-6 pt-24 md:px-12 md:pt-32">
+
+        {/* Launch banner */}
+        <div
+          className="mb-12 flex items-center justify-center gap-3 p-4"
+          style={{ background: 'rgba(22, 163, 74, 0.08)', border: '1px solid rgba(22, 163, 74, 0.25)' }}
+        >
+          <span aria-hidden="true" className="h-2 w-2 rounded-full bg-green-500 cta-pulse" />
+          <p className="font-body text-sm font-semibold text-green-400">
+            <span className="font-black text-white">Tarifs de lancement actifs.</span>{' '}
+            Les plans payants sont réservés aux premiers clients et passent par un checkout Stripe sécurisé.
+          </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {plans.map((plan) => {
-            const href = plan.href
-              ? plan.href
-              : plan.hrefEnv === 'NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO'
-              ? (process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO ?? '/auth/register')
-              : (process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_CLUB ?? '/auth/register');
+        <div className="mb-16 flex flex-col items-center text-center">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="h-px w-8 bg-green-600" />
+            <span className="font-body text-xs font-bold uppercase tracking-[0.3em] text-green-600">Tarifs</span>
+            <div className="h-px w-8 bg-green-600" />
+          </div>
+          <h2
+            className="font-display uppercase text-white"
+            style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', letterSpacing: '-0.01em' }}
+          >
+            Simple, transparent,{' '}
+            <span className="text-gradient-green">dès le lancement.</span>
+          </h2>
+          <p className="mt-4 max-w-2xl font-body text-sm leading-relaxed text-slate-400">
+            Le plan Starter reste gratuit pour lancer vos premiers visuels. Les plans Pro et Club affichent des{' '}
+            <strong className="text-slate-300">prix fondateurs</strong> réservés aux premiers clients.
+          </p>
+        </div>
 
-            return (
-              <div
-                key={plan.name}
-                className={`relative rounded-xl border p-8 flex flex-col ${
-                  plan.highlighted
-                    ? 'border-green-500 bg-green-950/20'
-                    : 'border-green-900/30 bg-green-950/10'
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-semibold text-black">
-                      Populaire
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-display text-2xl uppercase text-white">{plan.name}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{plan.description}</p>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="font-display text-5xl text-white">{plan.price}</span>
-                    {plan.period && <span className="text-gray-500">{plan.period}</span>}
-                  </div>
-                  <ul className="mt-6 space-y-3">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-gray-300">
-                        <svg className="h-4 w-4 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                        </svg>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative flex flex-col p-8 transition-all duration-300 ${plan.highlighted ? 'pricing-highlight' : 'card-hover'}`}
+              style={
+                plan.highlighted
+                  ? { background: 'rgba(5, 46, 22, 0.4)', border: '1px solid rgba(22, 163, 74, 0.4)' }
+                  : { background: 'rgba(5, 46, 22, 0.15)', border: '1px solid rgba(22, 163, 74, 0.12)' }
+              }
+            >
+              {plan.highlighted && (
+                <div
+                  className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 font-body text-xs font-black uppercase tracking-[0.2em] text-white"
+                  style={{ background: '#16a34a' }}
+                >
+                  Populaire
                 </div>
-                <div className="mt-8">
-                  <Link
-                    href={href}
-                    className={`block w-full rounded-md py-3 text-center text-sm font-semibold transition-colors ${
-                      plan.highlighted
-                        ? 'bg-green-500 text-black hover:bg-green-400'
-                        : 'border border-green-900/40 text-white hover:border-green-500/50'
-                    }`}
-                  >
-                    {plan.cta}
-                  </Link>
+              )}
+
+              <h3 className="font-display text-2xl uppercase tracking-widest text-white">{plan.name}</h3>
+
+              <div className="mt-4">
+                <div className="flex items-end gap-2">
+                  <span className="font-display text-4xl text-white" style={{ letterSpacing: '-0.02em' }}>{plan.price}</span>
+                  <span className="mb-1 font-body text-sm text-slate-500">/ mois</span>
+                </div>
+                <div
+                  className="mt-2 inline-block px-2 py-1 font-body text-[10px] font-bold uppercase tracking-wider"
+                  style={{ background: 'rgba(22, 163, 74, 0.1)', border: '1px solid rgba(22, 163, 74, 0.25)', color: 'rgba(22, 163, 74, 0.9)' }}
+                >
+                  {plan.label}
                 </div>
               </div>
-            );
-          })}
+
+              <p className="mt-4 font-body text-sm leading-relaxed text-slate-400">{plan.description}</p>
+
+              <div className="my-6 h-px bg-green-900/20" />
+
+              <ul className="flex flex-col gap-3">
+                {plan.features.map((f) => (
+                  <li key={f.text} className={`flex items-start gap-2.5 ${!f.included ? 'opacity-40' : ''}`}>
+                    {f.included ? checkIcon : crossIcon}
+                    <span className={`font-body text-sm ${f.included ? 'text-slate-300' : 'text-slate-500'}`}>{f.text}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-8">
+                <Link
+                  href={plan.href}
+                  className={`group relative flex w-full items-center justify-center overflow-hidden px-6 py-3.5 font-body text-sm font-black uppercase tracking-[0.2em] transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 ${
+                    plan.highlighted
+                      ? 'bg-green-700 text-white hover:bg-green-600 cta-pulse'
+                      : 'bg-transparent text-green-500 hover:bg-green-900/20'
+                  }`}
+                  style={!plan.highlighted ? { border: '1px solid rgba(22, 163, 74, 0.3)' } : undefined}
+                >
+                  {plan.highlighted && (
+                    <span aria-hidden="true" className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
+                  )}
+                  <span className="relative z-10">{plan.cta}</span>
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
+
+        <p className="mt-6 text-center font-body text-xs uppercase tracking-[0.18em] text-slate-500">
+          Le checkout Stripe hébergé regroupe les offres Pro et Club.
+        </p>
       </div>
+      <div className="section-divider mt-24 md:mt-32" />
     </section>
   );
 }

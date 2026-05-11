@@ -11,7 +11,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 const barlow = Barlow({
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700', '800'],
   subsets: ['latin'],
   variable: '--font-barlow',
   display: 'swap',
