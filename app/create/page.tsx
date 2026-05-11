@@ -90,7 +90,7 @@ function TeamInput({
 
   return (
     <div className="relative">
-      <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+      <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">
         {label}
       </label>
       <input
@@ -106,7 +106,7 @@ function TeamInput({
           className="absolute z-10 mt-0.5 w-full shadow-xl"
           style={{ background: '#0d1f13', border: '1px solid rgba(22,163,74,0.3)' }}
         >
-          {searching && <div className="px-4 py-2 font-body text-xs text-slate-500">Recherche…</div>}
+          {searching && <div className="px-4 py-2 font-body text-xs text-green-700">Recherche…</div>}
           {results.map((t) => (
             <button
               key={t.id}
@@ -214,7 +214,7 @@ export default function CreatePage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/generation-quota').then((r) => r.ok && r.json().then(setQuota));
+    fetch('/api/generation-quota').then((r) => { if (r.ok) r.json().then(setQuota); });
   }, []);
 
   async function retryLogo(team: 'home' | 'away') {
@@ -476,7 +476,7 @@ export default function CreatePage() {
                 {/* Score final — only for après-match */}
                 {posterType === 'apres-match' && (
                   <div className="p-4" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.25)' }}>
-                    <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Score final</p>
+                    <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Score final</p>
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col items-center gap-1">
                         <span className="font-body text-[10px] uppercase tracking-widest text-slate-600">Éq. A</span>
@@ -541,7 +541,7 @@ export default function CreatePage() {
                 {/* Date + Heure */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Date *</label>
+                    <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Date *</label>
                     <input
                       type="date"
                       value={data.date}
@@ -551,7 +551,7 @@ export default function CreatePage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Heure</label>
+                    <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Heure</label>
                     <input
                       type="time"
                       value={data.time}
@@ -563,7 +563,7 @@ export default function CreatePage() {
                 </div>
                 {/* Compétition */}
                 <div>
-                  <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Compétition</label>
+                  <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Compétition</label>
                   <div className="relative">
                     <select
                       value={data.competition}
@@ -576,14 +576,14 @@ export default function CreatePage() {
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
-                    <svg className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <svg className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-green-700" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                 </div>
                 {/* Lieu */}
                 <div>
-                  <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Lieu / Stade</label>
+                  <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Lieu / Stade</label>
                   <input
                     type="text"
                     value={data.venue}
@@ -679,7 +679,7 @@ export default function CreatePage() {
                     <input ref={awayLogoInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => handleLogoUpload(e, 'away')} className="hidden" />
                   </div>
                 </div>
-                <p className="font-body text-xs text-slate-500">
+                <p className="font-body text-xs text-green-700">
                   Les logos sont optionnels — l&apos;IA peut travailler sans eux.
                 </p>
               </div>
@@ -690,7 +690,7 @@ export default function CreatePage() {
               <div className="animate-fade-in-up space-y-7">
                 {/* Ambiance cards */}
                 <div>
-                  <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Ambiance</p>
+                  <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-700">Ambiance</p>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {AMBIANCES.map((a) => (
                       <button
@@ -705,7 +705,7 @@ export default function CreatePage() {
                       >
                         <div className="mb-2 text-2xl">{a.icon}</div>
                         <p className={`font-display text-sm uppercase ${data.style === a.key ? 'text-green-400' : 'text-white'}`}>{a.key}</p>
-                        <p className="mt-0.5 font-body text-[10px] leading-relaxed text-slate-500">{a.desc}</p>
+                        <p className="mt-0.5 font-body text-[10px] leading-relaxed text-green-700">{a.desc}</p>
                       </button>
                     ))}
                   </div>
@@ -713,7 +713,7 @@ export default function CreatePage() {
 
                 {/* Color mode toggle */}
                 <div>
-                  <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Couleur dominante</p>
+                  <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-700">Couleur dominante</p>
                   <div className="flex">
                     <button
                       type="button"
@@ -744,14 +744,14 @@ export default function CreatePage() {
                   {data.colorMode === 'custom' && (
                     <div className="mt-3 grid grid-cols-2 gap-4">
                       <div>
-                        <p className="mb-2 font-body text-[10px] text-slate-500">Couleur domicile</p>
+                        <p className="mb-2 font-body text-[10px] text-green-700">Couleur domicile</p>
                         <div className="flex items-center gap-3">
                           <input type="color" value={data.homeColors} onChange={(e) => update({ homeColors: e.target.value })} className="h-10 w-10 cursor-pointer border-0 bg-transparent" />
                           <span className="font-body text-xs text-slate-400">{data.homeColors}</span>
                         </div>
                       </div>
                       <div>
-                        <p className="mb-2 font-body text-[10px] text-slate-500">Couleur extérieur</p>
+                        <p className="mb-2 font-body text-[10px] text-green-700">Couleur extérieur</p>
                         <div className="flex items-center gap-3">
                           <input type="color" value={data.awayColors} onChange={(e) => update({ awayColors: e.target.value })} className="h-10 w-10 cursor-pointer border-0 bg-transparent" />
                           <span className="font-body text-xs text-slate-400">{data.awayColors}</span>
@@ -763,7 +763,7 @@ export default function CreatePage() {
 
                 {/* Description */}
                 <div>
-                  <label className="mb-1 block font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">
+                  <label className="mb-1 block font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-700">
                     Description libre
                     <span className="ml-2 font-normal text-slate-600">(optionnel)</span>
                   </label>
@@ -892,14 +892,14 @@ export default function CreatePage() {
               ) : step === 4 ? (
                 <button
                   onClick={() => setStep(3)}
-                  className="font-body text-xs font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-slate-300 transition-colors"
+                  className="font-body text-xs font-bold uppercase tracking-[0.2em] text-green-700 hover:text-slate-300 transition-colors"
                 >
                   ← Modifier le style
                 </button>
               ) : (
                 <button
                   onClick={() => setStep((s) => Math.max(0, s - 1))}
-                  className="font-body text-xs font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-slate-300 transition-colors"
+                  className="font-body text-xs font-bold uppercase tracking-[0.2em] text-green-700 hover:text-slate-300 transition-colors"
                 >
                   ← Retour
                 </button>

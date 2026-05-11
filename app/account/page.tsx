@@ -112,7 +112,7 @@ export default function AccountPage() {
 
             {/* Plan stat */}
             <div className="p-5" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.15)' }}>
-              <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Plan actuel</p>
+              <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-700">Plan actuel</p>
               <p className="mt-1 font-display text-3xl uppercase text-white">{quota?.plan?.toUpperCase() ?? '—'}</p>
               {quota && (
                 <div
@@ -122,19 +122,19 @@ export default function AccountPage() {
                   {quota.quota_remaining} restants
                 </div>
               )}
-              <p className="mt-2 font-body text-xs text-slate-500">
+              <p className="mt-2 font-body text-xs text-green-700">
                 Période active : {new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
               </p>
             </div>
 
             {/* Payments stat */}
             <div className="p-5" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.15)' }}>
-              <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Paiements</p>
+              <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-700">Paiements</p>
               <p className="mt-1 font-display text-3xl text-white">{payments.length}</p>
-              <p className="font-body text-xs text-slate-500">
+              <p className="font-body text-xs text-green-700">
                 transaction{payments.length !== 1 ? 's' : ''} enregistrée{payments.length !== 1 ? 's' : ''}
               </p>
-              <p className="mt-2 font-body text-xs text-slate-500">
+              <p className="mt-2 font-body text-xs text-green-700">
                 Total : {(payments.reduce((acc, p) => acc + p.amount, 0) / 100).toFixed(2)}€
               </p>
             </div>
@@ -160,17 +160,17 @@ export default function AccountPage() {
             </div>
 
             <div className="mb-6 p-4" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.12)' }}>
-              <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-1">Email du compte</p>
+              <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700 mb-1">Email du compte</p>
               <p className="font-body text-sm font-semibold text-white break-all">{session?.user?.email}</p>
-              <p className="mt-1 font-body text-xs text-slate-500">
+              <p className="mt-1 font-body text-xs text-green-700">
                 Cette adresse est utilisée pour retrouver vos achats et l&apos;historique associé à votre compte.
               </p>
             </div>
 
             <form onSubmit={handlePasswordChange} className="space-y-4">
-              <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Changer le mot de passe</p>
+              <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Changer le mot de passe</p>
               <div>
-                <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Mot de passe actuel</label>
+                <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Mot de passe actuel</label>
                 <input
                   type="password"
                   value={currentPwd}
@@ -181,7 +181,7 @@ export default function AccountPage() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Nouveau mot de passe</label>
+                <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Nouveau mot de passe</label>
                 <input
                   type="password"
                   value={newPwd}
@@ -194,7 +194,7 @@ export default function AccountPage() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Confirmation</label>
+                <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Confirmation</label>
                 <input
                   type="password"
                   value={confirmPwd}
@@ -234,7 +234,7 @@ export default function AccountPage() {
             {/* Current plan */}
             {quota && (
               <div className="mb-5 p-4" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.2)' }}>
-                <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Offre active</p>
+                <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Offre active</p>
                 <div className="mt-1 flex items-start justify-between">
                   <div>
                     <p className="font-display text-3xl uppercase text-white">{quota.plan}</p>
@@ -243,7 +243,7 @@ export default function AccountPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-body text-xs text-slate-500">Prix</p>
+                    <p className="font-body text-xs text-green-700">Prix</p>
                     <p className="font-body text-sm font-semibold text-white">
                       {quota.plan === 'starter' ? 'Gratuit' : quota.plan === 'pro' ? '9€/mois' : '29€/mois'}
                     </p>
@@ -256,10 +256,10 @@ export default function AccountPage() {
                   </div>
                   <div className="p-2.5" style={{ background: 'rgba(5,46,22,0.3)', border: '1px solid rgba(22,163,74,0.1)' }}>
                     <p className="font-body text-[9px] font-bold uppercase tracking-wider text-slate-600">Référence</p>
-                    <p className="font-body text-xs text-slate-500">Aucune référence</p>
+                    <p className="font-body text-xs text-green-700">Aucune référence</p>
                   </div>
                 </div>
-                <p className="mt-2 font-body text-xs text-slate-500">
+                <p className="mt-2 font-body text-xs text-green-700">
                   {quota.quota_total - quota.quota_remaining}/{quota.quota_total} générées
                 </p>
               </div>
@@ -268,7 +268,7 @@ export default function AccountPage() {
             {/* Upgrade options */}
             {quota?.plan === 'starter' && (
               <>
-                <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">Options disponibles</p>
+                <p className="mb-3 font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-700">Options disponibles</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-4" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.2)' }}>
                     <div className="mb-2 flex items-center justify-between">
@@ -315,7 +315,7 @@ export default function AccountPage() {
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
-                className="mt-4 font-body text-xs text-slate-500 hover:text-red-400 transition-colors"
+                className="mt-4 font-body text-xs text-green-700 hover:text-red-400 transition-colors"
               >
                 {cancelling ? 'Annulation…' : 'Annuler mon abonnement'}
               </button>
@@ -335,7 +335,7 @@ export default function AccountPage() {
 
           {loading ? (
             <div
-              className="p-12 text-center font-body text-sm text-slate-500"
+              className="p-12 text-center font-body text-sm text-green-700"
               style={{ background: 'rgba(5,46,22,0.1)', border: '1px solid rgba(22,163,74,0.1)' }}
             >
               Chargement…
@@ -368,7 +368,7 @@ export default function AccountPage() {
                     <p className="font-body text-sm text-white capitalize">
                       {p.event_type === 'upgrade' ? 'Abonnement' : p.event_type}
                     </p>
-                    <p className="font-body text-xs text-slate-500">{new Date(p.created_at).toLocaleDateString('fr-FR')}</p>
+                    <p className="font-body text-xs text-green-700">{new Date(p.created_at).toLocaleDateString('fr-FR')}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-body text-sm font-bold text-green-400">{(p.amount / 100).toFixed(2)}€</p>

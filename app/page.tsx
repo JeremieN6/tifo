@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
+import ExemplesSection from '@/components/ExemplesSection';
 import HowItWorksSection from '@/components/HowItWorksSection';
 import BenefitsSection from '@/components/BenefitsSection';
 import FeaturesSection from '@/components/FeaturesSection';
@@ -15,6 +16,7 @@ export default function HomePage() {
       <Navbar />
       <main>
         <HeroSection />
+        <ExemplesSection />
         <HowItWorksSection />
         <BenefitsSection />
         <FeaturesSection />
