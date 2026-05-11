@@ -52,7 +52,7 @@ export default function Navbar({ createStep }: { createStep?: { current: number;
               <span className="text-green-600">FO</span>
             </Link>
 
-            <div className="hidden items-center gap-8 md:flex">
+            <div className="hidden items-center gap-6 md:flex">
               <Link href="#fonctionnalites" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 transition-colors duration-200 hover:text-green-400">
                 Fonctionnalités
               </Link>
@@ -63,28 +63,43 @@ export default function Navbar({ createStep }: { createStep?: { current: number;
                 FAQ
               </Link>
               {session && (
-                <Link href="/dashboard" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 transition-colors duration-200 hover:text-green-400">
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    href="/account"
+                    className="rounded-full border border-white/20 px-4 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.18em] text-slate-300 transition-colors hover:border-green-500/60 hover:text-white"
+                  >
+                    Compte
+                  </Link>
+                  <Link
+                    href="/dashboard"
+                    className="rounded-full border border-white/20 px-4 py-1.5 font-body text-[10px] font-black uppercase tracking-[0.18em] text-slate-300 transition-colors hover:border-green-500/60 hover:text-white"
+                  >
+                    Dashboard
+                  </Link>
+                </>
               )}
             </div>
 
             <div className="flex items-center gap-3">
               {session ? (
                 <>
+                  {/* Club / user name */}
+                  <span className="hidden max-w-[140px] truncate font-body text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400 sm:block">
+                    {session.user?.name ?? session.user?.email}
+                  </span>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="hidden font-body text-xs font-black uppercase tracking-[0.2em] text-slate-300 transition-colors duration-200 hover:text-white sm:block"
+                  >
+                    Déconnexion
+                  </button>
                   <Link
                     href="/create"
                     className="group relative overflow-hidden bg-green-700 px-5 py-2.5 font-body text-xs font-black uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-green-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                   >
                     <span aria-hidden="true" className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
-                    <span className="relative z-10">Créer une affiche</span>
+                    <span className="relative z-10">Créer mon affiche</span>
                   </Link>
-                  <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
-                    className="hidden font-body text-xs font-black uppercase tracking-[0.2em] text-slate-300 transition-colors duration-200 hover:text-green-400 sm:block"
-                  >
-                    Déconnexion
-                  </button>
                 </>
               ) : (
                 <>
@@ -128,8 +143,10 @@ export default function Navbar({ createStep }: { createStep?: { current: number;
               <Link href="#faq" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400" onClick={() => setMenuOpen(false)}>FAQ</Link>
               {session ? (
                 <>
+                  <span className="truncate font-body text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">{session.user?.name ?? session.user?.email}</span>
+                  <Link href="/account" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400" onClick={() => setMenuOpen(false)}>Compte</Link>
                   <Link href="/dashboard" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                  <Link href="/create" className="text-xs font-black uppercase tracking-[0.2em] text-green-400" onClick={() => setMenuOpen(false)}>Créer une affiche</Link>
+                  <Link href="/create" className="text-xs font-black uppercase tracking-[0.2em] text-green-400" onClick={() => setMenuOpen(false)}>Créer mon affiche</Link>
                   <button onClick={() => signOut({ callbackUrl: '/' })} className="text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-500">Déconnexion</button>
                 </>
               ) : (
