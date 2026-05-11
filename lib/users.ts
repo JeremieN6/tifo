@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import pool from './db';
 
 export async function createUser(email: string, password: string, name?: string) {
-  const hash = await bcrypt.hash(password, 12);
+  const hash = await bcrypt.hash(password, 10);
   const result = await pool.query(
     'INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id, email, name',
     [email.toLowerCase().trim(), hash, name ?? null]
@@ -25,6 +25,6 @@ export async function getUserByEmail(email: string) {
 }
 
 export async function updateUserPassword(userId: string, newPassword: string) {
-  const hash = await bcrypt.hash(newPassword, 12);
+  const hash = await bcrypt.hash(newPassword, 10);
   await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, userId]);
 }

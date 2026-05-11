@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool } from '@neondatabase/serverless';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -7,7 +7,6 @@ declare global {
 
 const pool = globalThis._pgPool ?? new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 if (process.env.NODE_ENV !== 'production') {
