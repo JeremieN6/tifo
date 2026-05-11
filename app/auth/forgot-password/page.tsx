@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
           <Link
             aria-label="Tifo"
             href="/"
-            className="font-display text-2xl uppercase"
+            className="font-display text-4xl uppercase"
           >
             <span className="text-white">TI</span>
             <span className="text-green-600">FO</span>
@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
             <Link
               aria-label="Tifo"
               href="/"
-              className="mb-8 block font-display text-2xl uppercase md:hidden"
+              className="mb-8 block font-display text-4xl uppercase md:hidden"
             >
               <span className="text-white">TI</span>
               <span className="text-green-600">FO</span>

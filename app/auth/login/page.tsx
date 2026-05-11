@@ -45,7 +45,7 @@ export default function LoginPage() {
       <div className="relative z-10 mx-auto grid min-h-screen max-w-6xl grid-cols-1 items-center gap-10 px-6 py-12 md:grid-cols-2">
       {/* Left column */}
       <div className="relative hidden flex-col justify-between py-12 md:flex">
-        <Link aria-label="Tifo" href="/" className="font-display text-2xl uppercase">
+        <Link aria-label="Tifo" href="/" className="font-display text-3xl uppercase">
           <span className="text-white">TI</span>
           <span className="text-green-600">FO</span>
         </Link>
@@ -90,7 +90,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center py-12">
         <div className="w-full max-w-md p-8 md:p-10" style={{ background: 'rgba(5,46,22,0.15)', border: '1px solid rgba(22,163,74,0.2)' }}>
           {/* Mobile logo */}
-          <Link aria-label="Tifo" href="/" className="mb-8 block font-display text-2xl uppercase md:hidden">
+          <Link aria-label="Tifo" href="/" className="mb-8 block font-display text-3xl uppercase md:hidden">
             <span className="text-white">TI</span>
             <span className="text-green-600">FO</span>
           </Link>
