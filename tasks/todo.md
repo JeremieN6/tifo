@@ -5,10 +5,12 @@
 ---
 
 ## En cours
-- [ ] Configurer les variables d'environnement (.env.local)
-- [ ] Provisionner la base PostgreSQL et exécuter les SQL (db/*.sql)
-- [ ] Tester le build de prod : `npm run build`
+- [ ] Tester les parcours complets en local (signup/login/génération/upgrade/reset password)
 - [ ] Déployer sur Hostinger VPS
+- [ ] Configurer les variables d'environnement de production (Hostinger)
+- [ ] Configurer le webhook Stripe vers l'URL de production
+- [ ] Vérifier le domaine d'envoi Resend (SPF/DKIM + sender)
+- [ ] Faire un test de paiement réel (petit montant) puis remboursement
 
 ## Fait
 - [x] Initialisation MCP memoire + structure projet
@@ -19,3 +21,7 @@
 - [x] 4 fichiers SQL (auth, billing, poster_history, password_reset_tokens)
 - [x] Middleware protection routes (/create, /dashboard, /account, /admin)
 - [x] TypeScript 0 erreur, npm install OK
+- [x] Variables d'environnement locales configurées (.env.local)
+- [x] Base Neon provisionnée + tables créées
+- [x] Build de production validé (`npm run build`)
+- [x] Webhook Stripe sécurisé (vérification de signature)

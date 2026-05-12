@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { handleStripeWebhook } from '@/lib/stripe-webhook';
 
-// Compat legacy path. Nouveau endpoint recommandé: /api/webhooks/stripe
 export async function POST(req: NextRequest) {
   return handleStripeWebhook(req);
 }
