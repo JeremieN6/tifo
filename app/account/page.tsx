@@ -32,9 +32,6 @@ export default function AccountPage() {
   const [pwdError, setPwdError] = useState('');
   const [pwdLoading, setPwdLoading] = useState(false);
 
-  // Cancel
-  const [cancelling, setCancelling] = useState(false);
-
   useEffect(() => {
     async function load() {
       const [qRes, pRes] = await Promise.all([
@@ -75,13 +72,6 @@ export default function AccountPage() {
       setNewPwd('');
       setConfirmPwd('');
     }
-  }
-
-  async function handleCancel() {
-    if (!confirm('Confirmes-tu l\'annulation de ton abonnement ? Tu repasseras sur le plan Starter.')) return;
-    setCancelling(true);
-    await fetch('/api/account/subscription', { method: 'POST' });
-    window.location.reload();
   }
 
   return (
@@ -281,7 +271,7 @@ export default function AccountPage() {
                       ))}
                     </ul>
                     <Link
-                      href={process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO ?? '/#pricing'}
+                      href="/api/stripe/checkout?plan=pro"
                       className="block w-full bg-green-700 py-2 text-center font-body text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
                     >
                       Passer sur Pro
@@ -298,7 +288,7 @@ export default function AccountPage() {
                       ))}
                     </ul>
                     <Link
-                      href={process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_CLUB ?? '/#pricing'}
+                      href="/api/stripe/checkout?plan=club"
                       className="block w-full bg-green-700 py-2 text-center font-body text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
                     >
                       Passer sur Club
@@ -312,13 +302,12 @@ export default function AccountPage() {
             )}
 
             {(quota?.plan === 'pro' || quota?.plan === 'club') && (
-              <button
-                onClick={handleCancel}
-                disabled={cancelling}
-                className="mt-4 font-body text-xs text-green-700 hover:text-red-400 transition-colors"
+              <Link
+                href="/api/account/customer-portal"
+                className="mt-4 inline-block font-body text-xs text-green-700 hover:text-red-400 transition-colors"
               >
-                {cancelling ? 'Annulation…' : 'Annuler mon abonnement'}
-              </button>
+                Annuler mon abonnement
+              </Link>
             )}
           </div>
         </div>
@@ -330,7 +319,15 @@ export default function AccountPage() {
               <div className="h-px w-6 bg-green-600" />
               <p className="font-body text-xs font-bold uppercase tracking-[0.3em] text-green-600">Historique</p>
             </div>
-            <h2 className="font-display text-2xl uppercase text-white">Historique de facturation</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-display text-2xl uppercase text-white">Historique de facturation</h2>
+              <Link
+                href="/api/account/invoice"
+                className="bg-green-700 px-4 py-2 font-body text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
+              >
+                Télécharger ma facture
+              </Link>
+            </div>
           </div>
 
           {loading ? (

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { upgradePlan } from '@/lib/billing';
+import { setStripeCustomerId, upgradePlan } from '@/lib/billing';
 
 export async function handleStripeWebhook(req: NextRequest) {
   try {
@@ -31,18 +31,29 @@ export async function handleStripeWebhook(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const userEmail = session.customer_details?.email ?? session.customer_email;
     const amount = session.amount_total ?? 0;
+    const stripeCustomerId = typeof session.customer === 'string' ? session.customer : null;
 
     if (!userEmail || !amount) {
       return NextResponse.json({ error: 'Données manquantes.' }, { status: 400 });
     }
 
+    const metadataPlan = session.metadata?.plan;
     let plan: 'pro' | 'club' | null = null;
-    if (amount === 900) plan = 'pro';
-    else if (amount === 2900) plan = 'club';
+    if (metadataPlan === 'pro' || metadataPlan === 'club') {
+      plan = metadataPlan;
+    } else if (amount === 900) {
+      plan = 'pro';
+    } else if (amount === 2900) {
+      plan = 'club';
+    }
 
     if (!plan) {
       console.warn('[webhook/stripe] Montant inconnu:', amount);
       return NextResponse.json({ received: true });
+    }
+
+    if (stripeCustomerId) {
+      await setStripeCustomerId(userEmail, stripeCustomerId);
     }
 
     await upgradePlan(userEmail, plan, event.id, amount);

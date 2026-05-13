@@ -7,6 +7,11 @@ export interface UserAccess {
   stripe_customer_id: string | null;
 }
 
+export async function getUserEmail(userId: string): Promise<string | null> {
+  const result = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
+  return result.rows[0]?.email ?? null;
+}
+
 export async function getUserAccess(userId: string): Promise<UserAccess | null> {
   const result = await pool.query(
     'SELECT plan, quota_remaining, quota_total, stripe_customer_id FROM user_access WHERE user_id = $1',
@@ -49,6 +54,24 @@ export async function upgradePlan(
      ON CONFLICT (stripe_event_id) DO NOTHING`,
     [stripeEventId, userEmail, 'upgrade', amount, 'eur', 'completed']
   );
+}
+
+export async function setStripeCustomerId(userEmail: string, stripeCustomerId: string): Promise<void> {
+  await pool.query(
+    `UPDATE user_access ua
+     SET stripe_customer_id = $1, updated_at = NOW()
+     FROM users u
+     WHERE ua.user_id = u.id AND u.email = $2`,
+    [stripeCustomerId, userEmail]
+  );
+}
+
+export async function getStripeCustomerIdByUserId(userId: string): Promise<string | null> {
+  const result = await pool.query(
+    'SELECT stripe_customer_id FROM user_access WHERE user_id = $1',
+    [userId]
+  );
+  return result.rows[0]?.stripe_customer_id ?? null;
 }
 
 export async function cancelPlan(userId: string): Promise<void> {

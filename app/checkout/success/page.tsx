@@ -1,12 +1,23 @@
 'use client';
 import { Suspense } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AuthShell from '@/components/auth/AuthShell';
 
 function SuccessContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan') ?? 'pro';
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.replace('/dashboard');
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [router]);
 
   const messages: Record<string, { title: string; text: string }> = {
     pro: {
@@ -29,6 +40,7 @@ function SuccessContent() {
         <p className="text-sm text-gray-500">
           Si ton quota n'est pas encore mis à jour, patiente quelques instants et recharge la page.
         </p>
+        <p className="text-xs text-gray-500">Redirection automatique vers ton dashboard…</p>
         <Link
           href="/dashboard"
           className="block rounded-md bg-green-500 px-6 py-3 text-sm font-semibold text-black hover:bg-green-400 transition-colors"

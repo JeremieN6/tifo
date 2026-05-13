@@ -5,6 +5,9 @@
 ---
 
 ## En cours
+- [x] [Session] Stripe checkout : redirection post-paiement vers l'app
+- [x] [Session] Account : bouton "Télécharger ma facture"
+- [x] [Session] Account : annulation via Stripe Customer Portal
 - [x] [Session] Dashboard : CTA contextuel selon plan (starter/pro/club)
 - [x] [Session] Dashboard : clarifier la carte "Activité récente"
 - [x] [Session] Vérification rapide TypeScript/lint sur la page dashboard

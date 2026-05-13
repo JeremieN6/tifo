@@ -48,15 +48,13 @@ export default function DashboardPage() {
   }
 
   const isUnlimited = quota?.quota_total === 999999;
-  const proPaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO ?? '/#pricing';
-  const clubPaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_CLUB ?? '/#pricing';
   const dashboardPlan = quota?.plan ?? 'starter';
   const isClubPlan = dashboardPlan === 'club';
 
   const nextUpgrade = dashboardPlan === 'starter'
     ? {
         target: 'Pro',
-        href: proPaymentLink,
+        href: '/api/stripe/checkout?plan=pro',
         cta: 'Upgrade vers Pro',
         description: 'Passez en Pro pour publier sans limite et exporter vos visuels en haute définition.',
         features: ['Affiches illimitées', 'Tous les formats réseaux', 'Sans filigrane', 'Export PNG + JPG HD'],
@@ -64,7 +62,7 @@ export default function DashboardPage() {
     : dashboardPlan === 'pro'
       ? {
           target: 'Club',
-          href: clubPaymentLink,
+          href: '/api/stripe/checkout?plan=club',
           cta: 'Passer au Club',
           description: 'Passez en Club pour gérer plusieurs équipes et aller plus loin dans la personnalisation.',
           features: ['Tout ce qu\'il y a dans Pro', 'Multi-équipes', 'Palette personnalisée', 'Formats sur mesure'],
