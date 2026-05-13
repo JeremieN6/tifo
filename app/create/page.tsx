@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
-import Image from 'next/image';
 
 // Types
 interface MatchData {
@@ -76,20 +75,45 @@ function TeamInput({
 }) {
   const [results, setResults] = useState<{ id: string; name: string; logo: string }[]>([]);
   const [searching, setSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  async function search(query: string) {
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, []);
+
+  function handleChange(query: string) {
     onChange(query);
-    if (query.length < 2) { setResults([]); return; }
-    setSearching(true);
-    try {
-      const res = await fetch(`/api/search-team?team=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      setResults(data.teams ?? []);
-    } catch {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    if (query.length < 3) {
       setResults([]);
-    } finally {
       setSearching(false);
+      onLogoChange('');
+      return;
     }
+    debounceRef.current = setTimeout(async () => {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/search-team?team=${encodeURIComponent(query)}`, { signal: controller.signal });
+        const data = await res.json();
+        const teams = data.teams ?? [];
+        setResults(teams);
+        onLogoChange(teams[0]?.logo ?? '');
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          setResults([]);
+          onLogoChange('');
+        }
+      } finally {
+        if (abortRef.current === controller) { setSearching(false); abortRef.current = null; }
+      }
+    }, 400);
   }
 
   function select(name: string, logoUrl: string) {
@@ -106,10 +130,12 @@ function TeamInput({
       <input
         type="text"
         value={value}
-        onChange={(e) => search(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         className="w-full px-4 py-3 font-body text-sm text-white placeholder-slate-600 focus:outline-none focus-visible:ring-1 focus-visible:ring-green-600"
         style={{ background: 'rgba(5,46,22,0.35)', border: '1px solid rgba(22,163,74,0.2)' }}
         placeholder={placeholder ?? 'ex. Paris Saint-Germain'}
+        autoComplete="new-password"
+        name={`team-search-${label}`}
       />
       {(results.length > 0 || searching) && (
         <div
@@ -124,7 +150,7 @@ function TeamInput({
               onClick={() => select(t.name, t.logo)}
               className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-body text-sm text-white hover:bg-green-900/20"
             >
-              {t.logo && <Image src={t.logo} alt={t.name} width={24} height={24} className="object-contain" />}
+              {t.logo && <img src={t.logo} alt={t.name} width={24} height={24} className="object-contain" loading="lazy" />}
               {t.name}
             </button>
           ))}
@@ -685,7 +711,7 @@ export default function CreatePage() {
                       style={{ borderTop: '1px solid rgba(22,163,74,0.12)', borderBottom: '1px solid rgba(22,163,74,0.12)' }}
                     >
                       {data.homeTeamLogo ? (
-                        <Image src={data.homeTeamLogo} alt={data.homeTeam} width={90} height={90} className="object-contain" />
+                        <img src={data.homeTeamLogo} alt={data.homeTeam} width={90} height={90} className="object-contain" loading="lazy" />
                       ) : (
                         <p className="font-body text-xs text-slate-600">Aucun logo trouvé</p>
                       )}
@@ -705,7 +731,7 @@ export default function CreatePage() {
                         onClick={() => homeLogoInputRef.current?.click()}
                         className="flex flex-1 items-center justify-center gap-1.5 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 hover:text-green-400 transition-colors"
                       >
-                        <span>↑</span> Uploader
+                        <span>↑</span> Upload
                       </button>
                     </div>
                     <input ref={homeLogoInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => handleLogoUpload(e, 'home')} className="hidden" />
@@ -723,7 +749,7 @@ export default function CreatePage() {
                       style={{ borderTop: '1px solid rgba(22,163,74,0.12)', borderBottom: '1px solid rgba(22,163,74,0.12)' }}
                     >
                       {data.awayTeamLogo ? (
-                        <Image src={data.awayTeamLogo} alt={data.awayTeam} width={90} height={90} className="object-contain" />
+                        <img src={data.awayTeamLogo} alt={data.awayTeam} width={90} height={90} className="object-contain" loading="lazy" />
                       ) : (
                         <p className="font-body text-xs text-slate-600">Aucun logo trouvé</p>
                       )}
@@ -743,14 +769,14 @@ export default function CreatePage() {
                         onClick={() => awayLogoInputRef.current?.click()}
                         className="flex flex-1 items-center justify-center gap-1.5 py-2.5 font-body text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 hover:text-green-400 transition-colors"
                       >
-                        <span>↑</span> Uploader
+                        <span>↑</span> Upload
                       </button>
                     </div>
                     <input ref={awayLogoInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => handleLogoUpload(e, 'away')} className="hidden" />
                   </div>
                 </div>
                 <p className="font-body text-xs text-green-700">
-                  Les logos sont optionnels — Tifo peut travailler sans eux.
+                  Les logos sont optionnels s'ils ne s'ajoutent pas automatiquement, Tifo peut travailler sans eux.
                 </p>
               </div>
             )}

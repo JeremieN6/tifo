@@ -14,6 +14,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'www.thesportsdb.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'commons.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
     ],
   },
 };
