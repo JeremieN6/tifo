@@ -68,7 +68,7 @@ export default function HeroSection() {
             <span className="text-slate-200">
               s&apos;adaptent à l&apos;enjeu du match
             </span>{" "}
-            — derby, finale, relégation, titre en jeu. En quelques secondes,
+            , derby, finale, match décisif (maintien, relégation etc.), titre en jeu. En quelques secondes,
             pour tous les réseaux.
           </p>
 

@@ -6,13 +6,27 @@ interface SendEmailOptions {
 }
 
 export async function sendEmail(opts: SendEmailOptions): Promise<void> {
-  if (process.env.RESEND_API_KEY) {
-    await sendViaResend(opts);
-  } else if (process.env.SMTP_HOST) {
-    await sendViaSMTP(opts);
-  } else {
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  const hasSmtp = Boolean(process.env.SMTP_HOST);
+
+  if (!hasResend && !hasSmtp) {
     console.warn('[email] Aucun fournisseur configuré. Email non envoyé:', opts.subject);
+    return;
   }
+
+  if (hasResend) {
+    try {
+      await sendViaResend(opts);
+      return;
+    } catch (error) {
+      console.error('[email] Echec Resend, fallback SMTP:', error);
+      if (!hasSmtp) {
+        throw error;
+      }
+    }
+  }
+
+  await sendViaSMTP(opts);
 }
 
 async function sendViaResend(opts: SendEmailOptions): Promise<void> {
