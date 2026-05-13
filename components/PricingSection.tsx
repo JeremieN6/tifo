@@ -1,6 +1,9 @@
 'use client';
 import Link from 'next/link';
 
+const proPaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO ?? '/#pricing';
+const clubPaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_CLUB ?? '/#pricing';
+
 const checkIcon = (
   <svg aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 16 16">
     <path d="M13 4L6 11L3 8" />
@@ -49,7 +52,7 @@ const plans = [
       { text: 'Export personnalisé', included: false },
     ],
     cta: 'Choisir Pro',
-    href: '/checkout/pro',
+    href: proPaymentLink,
     highlighted: true,
   },
   {
@@ -66,7 +69,7 @@ const plans = [
       { text: 'Support dédié', included: true },
     ],
     cta: 'Choisir Club',
-    href: '/checkout/club',
+    href: clubPaymentLink,
     highlighted: false,
   },
 ];
