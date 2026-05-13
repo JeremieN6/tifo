@@ -11,6 +11,8 @@
 - [x] [Session] Dashboard : CTA contextuel selon plan (starter/pro/club)
 - [x] [Session] Dashboard : clarifier la carte "Activité récente"
 - [x] [Session] Vérification rapide TypeScript/lint sur la page dashboard
+- [x] [Session] Create : type d'événement + labels dynamiques (De/À ou Équipe A/B)
+- [x] [Session] Create : équipe B optionnelle hors recrutement/transfert + validation API alignée
 - [ ] Tester les parcours complets en local (signup/login/génération/upgrade/reset password)
 - [ ] Déployer sur Hostinger VPS
 - [ ] Configurer les variables d'environnement de production (Hostinger)

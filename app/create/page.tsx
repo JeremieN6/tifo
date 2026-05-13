@@ -10,6 +10,7 @@ import Image from 'next/image';
 interface MatchData {
   homeTeam: string;
   awayTeam: string;
+  eventType: 'match' | 'recrutement' | 'transfert' | 'tournoi' | 'plateau' | 'autre';
   homeTeamLogo: string;
   awayTeamLogo: string;
   date: string;
@@ -46,6 +47,15 @@ const COMPETITIONS = [
   'Coupe de France', 'Liga', 'Premier League', 'Serie A', 'Bundesliga',
   'Eredivisie', 'Championnat National', 'Amical', 'Autre',
 ];
+
+const EVENT_TYPES = [
+  { key: 'match', label: 'Match' },
+  { key: 'recrutement', label: 'Recrutement' },
+  { key: 'transfert', label: 'Transfert' },
+  { key: 'tournoi', label: 'Tournoi' },
+  { key: 'plateau', label: 'Plateau' },
+  { key: 'autre', label: 'Autre événement' },
+] as const;
 
 const MAX_DESC = 1500;
 const TOTAL_STEPS = 5;
@@ -191,6 +201,7 @@ export default function CreatePage() {
   const [data, setData] = useState<MatchData>({
     homeTeam: '',
     awayTeam: '',
+    eventType: 'match',
     homeTeamLogo: '',
     awayTeamLogo: '',
     date: '',
@@ -298,6 +309,9 @@ export default function CreatePage() {
     formData.append('colors', data.colorMode === 'auto' ? 'auto' : `${data.homeColors}, ${data.awayColors}`);
     formData.append('description', data.description.slice(0, MAX_DESC));
     formData.append('posterType', posterType);
+    if (posterType === 'annonce') {
+      formData.append('eventType', data.eventType);
+    }
     if (posterType === 'apres-match') {
       formData.append('score', `${data.homeScore}-${data.awayScore}`);
       if (data.isReturnLeg) formData.append('isReturnLeg', 'true');
@@ -346,6 +360,36 @@ export default function CreatePage() {
     { key: 'apres-match' as const, icon: '🏆', title: 'APRÈS-MATCH', description: 'Célébrez le résultat avec le score final' },
     { key: 'annonce' as const, icon: '📣', title: 'ANNONCE / ÉVÉNEMENT', description: 'Promouvez un événement ou actualité club' },
   ] as const;
+
+  const isAnnouncement = posterType === 'annonce';
+  const isTransferFlow = isAnnouncement && (data.eventType === 'recrutement' || data.eventType === 'transfert');
+  const isFlexibleAnnouncement = isAnnouncement && !isTransferFlow;
+  const requiresAwayTeam = !isAnnouncement || isTransferFlow;
+  const homeTeamLabel = isTransferFlow
+    ? 'De (club précédent) *'
+    : isFlexibleAnnouncement
+      ? 'Club principal / organisateur *'
+      : 'Équipe A (Domicile) *';
+  const awayTeamLabel = isTransferFlow
+    ? 'À (nouveau club) *'
+    : isFlexibleAnnouncement
+      ? 'Équipe B (optionnel)'
+      : 'Équipe B (Extérieur) *';
+  const homeTeamPlaceholder = isTransferFlow
+    ? 'ex. Olympique Lyonnais'
+    : isFlexibleAnnouncement
+      ? 'ex. US Créteil'
+      : 'ex. Paris Saint-Germain';
+  const awayTeamPlaceholder = isTransferFlow
+    ? 'ex. Paris Saint-Germain'
+    : isFlexibleAnnouncement
+      ? 'ex. Club invité'
+      : 'ex. Olympique de Marseille';
+  const homeLogoTitle = isTransferFlow ? 'De' : isFlexibleAnnouncement ? 'Club principal' : 'Équipe A';
+  const awayLogoTitle = isTransferFlow ? 'À' : isFlexibleAnnouncement ? 'Équipe B (optionnel)' : 'Équipe B';
+  const recapFaceOff = isTransferFlow
+    ? (data.homeTeam && data.awayTeam ? `De ${data.homeTeam} à ${data.awayTeam}` : '—')
+    : (data.homeTeam && data.awayTeam ? `${data.homeTeam} vs ${data.awayTeam}` : data.homeTeam || '—');
 
   return (
     <div className="min-h-screen bg-[#020f07]">
@@ -455,23 +499,49 @@ export default function CreatePage() {
             {/* ── STEP 1 — Infos match ── */}
             {step === 1 && (
               <div className="animate-fade-in-up space-y-5">
+                {isAnnouncement && (
+                  <div>
+                    <label className="mb-1.5 block font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Type d&apos;événement *</label>
+                    <div className="relative">
+                      <select
+                        value={data.eventType}
+                        onChange={(e) => update({ eventType: e.target.value as MatchData['eventType'] })}
+                        className="w-full appearance-none px-4 py-3 font-body text-sm text-white focus:outline-none focus-visible:ring-1 focus-visible:ring-green-600"
+                        style={{ background: 'rgba(5,46,22,0.35)', border: '1px solid rgba(22,163,74,0.2)', colorScheme: 'dark' }}
+                      >
+                        {EVENT_TYPES.map((eventType) => (
+                          <option key={eventType.key} value={eventType.key}>{eventType.label}</option>
+                        ))}
+                      </select>
+                      <svg className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-green-700" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
                 {/* Teams 2-col */}
                 <div className="grid grid-cols-2 gap-4">
                   <TeamInput
-                    label="Équipe A (Domicile) *"
-                    placeholder="ex. Paris Saint-Germain"
+                    label={homeTeamLabel}
+                    placeholder={homeTeamPlaceholder}
                     value={data.homeTeam}
                     onChange={(v) => update({ homeTeam: v })}
                     onLogoChange={(v) => update({ homeTeamLogo: v })}
                   />
                   <TeamInput
-                    label="Équipe B (Extérieur) *"
-                    placeholder="ex. Olympique de Marseille"
+                    label={awayTeamLabel}
+                    placeholder={awayTeamPlaceholder}
                     value={data.awayTeam}
                     onChange={(v) => update({ awayTeam: v })}
                     onLogoChange={(v) => update({ awayTeamLogo: v })}
                   />
                 </div>
+                {isFlexibleAnnouncement && (
+                  <p className="font-body text-xs text-green-700">
+                    Astuce : pour un tournoi ou un plateau, vous pouvez laisser le champ Équipe B vide.
+                  </p>
+                )}
 
                 {/* Score final — only for après-match */}
                 {posterType === 'apres-match' && (
@@ -607,7 +677,7 @@ export default function CreatePage() {
                   <div style={{ background: 'rgba(5,46,22,0.15)', border: '1px solid rgba(22,163,74,0.2)' }}>
                     <div className="p-4">
                       <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">
-                        Équipe A — {data.homeTeam || '—'}
+                        {homeLogoTitle} — {data.homeTeam || '—'}
                       </p>
                     </div>
                     <div
@@ -645,7 +715,7 @@ export default function CreatePage() {
                   <div style={{ background: 'rgba(5,46,22,0.15)', border: '1px solid rgba(22,163,74,0.2)' }}>
                     <div className="p-4">
                       <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">
-                        Équipe B — {data.awayTeam || '—'}
+                        {awayLogoTitle} — {data.awayTeam || '—'}
                       </p>
                     </div>
                     <div
@@ -680,7 +750,7 @@ export default function CreatePage() {
                   </div>
                 </div>
                 <p className="font-body text-xs text-green-700">
-                  Les logos sont optionnels — l&apos;IA peut travailler sans eux.
+                  Les logos sont optionnels — Tifo peut travailler sans eux.
                 </p>
               </div>
             )}
@@ -834,9 +904,19 @@ export default function CreatePage() {
                       <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">Type</p>
                       <p className="mt-0.5 font-body text-sm capitalize text-white">{posterType.replace('-', ' ') || '—'}</p>
                     </div>
+                    {isAnnouncement && (
+                      <div>
+                        <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">Type d&apos;événement</p>
+                        <p className="mt-0.5 font-body text-sm text-white">
+                          {EVENT_TYPES.find((eventType) => eventType.key === data.eventType)?.label || '—'}
+                        </p>
+                      </div>
+                    )}
                     <div>
-                      <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">Match</p>
-                      <p className="mt-0.5 font-body text-sm text-white">{data.homeTeam && data.awayTeam ? `${data.homeTeam} vs ${data.awayTeam}` : '—'}</p>
+                      <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">
+                        {isTransferFlow ? 'Mouvement' : isFlexibleAnnouncement ? 'Club(s)' : 'Match'}
+                      </p>
+                      <p className="mt-0.5 font-body text-sm text-white">{recapFaceOff}</p>
                     </div>
                     <div>
                       <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">Date</p>
@@ -907,7 +987,12 @@ export default function CreatePage() {
               {step >= 1 && step < 4 && (
                 <button
                   onClick={() => setStep((s) => Math.min(4, s + 1))}
-                  disabled={step === 1 && !data.homeTeam && !data.awayTeam}
+                  disabled={
+                    step === 1 && (
+                      !data.homeTeam ||
+                      (requiresAwayTeam && !data.awayTeam)
+                    )
+                  }
                   className="bg-green-700 px-8 py-3 font-body text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-green-600 disabled:opacity-50 transition-colors"
                 >
                   Continuer →

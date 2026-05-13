@@ -15,6 +15,8 @@ function getOpenAIClient(): OpenAI {
 }
 
 function buildPrompt(data: {
+  posterType: string;
+  eventType: string;
   homeTeam: string;
   awayTeam: string;
   date: string;
@@ -24,16 +26,24 @@ function buildPrompt(data: {
   colors: string;
   description: string;
 }): string {
+  const teamDescriptor = data.awayTeam
+    ? `${data.homeTeam} vs ${data.awayTeam}`
+    : data.homeTeam;
+  const eventDescriptor = data.posterType === 'annonce'
+    ? `Événement : ${data.eventType || 'annonce'}`
+    : 'Événement : match';
+
   return `Tu es un designer graphique expert en affiches de football. Crée une affiche de match professionnelle et visuellement impactante.
 
-Match : ${data.homeTeam} vs ${data.awayTeam}
+Sujet : ${teamDescriptor}
+${eventDescriptor}
 Date : ${data.date} à ${data.time}
 Lieu : ${data.venue}
 Style : ${data.style}
 Couleurs : ${data.colors}
 Description : ${data.description}
 
-L'affiche doit être au format portrait (2:3), avec les noms des deux équipes bien visibles, la date et le lieu du match. Style graphique : ${data.style}. Rendu professionnel, ambiance football passionate.`;
+L'affiche doit être au format portrait (2:3), avec une hiérarchie visuelle claire, la date et le lieu de l'événement. Si un seul club est fourni, mets-le au centre de la composition et évite d'inventer une seconde équipe. Style graphique : ${data.style}. Rendu professionnel, ambiance football passionate.`;
 }
 
 export async function POST(req: NextRequest) {
@@ -57,6 +67,8 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const homeTeam = formData.get('homeTeam') as string;
     const awayTeam = formData.get('awayTeam') as string;
+    const posterType = formData.get('posterType') as string;
+    const eventType = formData.get('eventType') as string;
     const date = formData.get('date') as string;
     const time = formData.get('time') as string;
     const venue = formData.get('venue') as string;
@@ -64,13 +76,18 @@ export async function POST(req: NextRequest) {
     const colors = formData.get('colors') as string;
     const description = (formData.get('description') as string ?? '').slice(0, 1500);
     const referenceFile = formData.get('reference') as File | null;
+    const isAnnouncement = posterType === 'annonce';
+    const isTransferEvent = isAnnouncement && (eventType === 'recrutement' || eventType === 'transfert');
 
-    if (!homeTeam || !awayTeam) {
-      return NextResponse.json({ error: 'Noms des équipes requis.' }, { status: 400 });
+    if (!homeTeam) {
+      return NextResponse.json({ error: 'Le premier club/équipe est requis.' }, { status: 400 });
+    }
+    if ((!isAnnouncement && !awayTeam) || (isTransferEvent && !awayTeam)) {
+      return NextResponse.json({ error: 'Le second club/équipe est requis pour ce type d\'affiche.' }, { status: 400 });
     }
 
-    const prompt = buildPrompt({ homeTeam, awayTeam, date, time, venue, style, colors, description });
-    const settings = { homeTeam, awayTeam, date, time, venue, style, colors };
+    const prompt = buildPrompt({ posterType, eventType, homeTeam, awayTeam, date, time, venue, style, colors, description });
+    const settings = { posterType, eventType, homeTeam, awayTeam, date, time, venue, style, colors };
 
     let imageB64: string;
 
@@ -115,7 +132,9 @@ export async function POST(req: NextRequest) {
 
     // Upload l'image vers Vercel Blob
     const buffer = Buffer.from(imageB64, 'base64');
-    const filename = `tifo-${homeTeam}-vs-${awayTeam}-${Date.now()}.png`;
+    const filename = awayTeam
+      ? `tifo-${homeTeam}-vs-${awayTeam}-${Date.now()}.png`
+      : `tifo-${homeTeam}-${Date.now()}.png`;
     
     const blob = await put(filename, buffer, {
       access: 'public',
