@@ -48,6 +48,28 @@ export default function DashboardPage() {
   }
 
   const isUnlimited = quota?.quota_total === 999999;
+  const proPaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO ?? '/#pricing';
+  const clubPaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_CLUB ?? '/#pricing';
+  const dashboardPlan = quota?.plan ?? 'starter';
+  const isClubPlan = dashboardPlan === 'club';
+
+  const nextUpgrade = dashboardPlan === 'starter'
+    ? {
+        target: 'Pro',
+        href: proPaymentLink,
+        cta: 'Upgrade vers Pro',
+        description: 'Passez en Pro pour publier sans limite et exporter vos visuels en haute définition.',
+        features: ['Affiches illimitées', 'Tous les formats réseaux', 'Sans filigrane', 'Export PNG + JPG HD'],
+      }
+    : dashboardPlan === 'pro'
+      ? {
+          target: 'Club',
+          href: clubPaymentLink,
+          cta: 'Passer au Club',
+          description: 'Passez en Club pour gérer plusieurs équipes et aller plus loin dans la personnalisation.',
+          features: ['Tout ce qu\'il y a dans Pro', 'Multi-équipes', 'Palette personnalisée', 'Formats sur mesure'],
+        }
+      : null;
 
   return (
     <div className="min-h-screen bg-[#020f07]">
@@ -86,17 +108,27 @@ export default function DashboardPage() {
                     {quota?.plan === 'starter' ? 'Gratuit' : (quota?.plan ?? '—')}
                   </p>
                   <div className="badge-beta mt-2 inline-block px-2 py-0.5 font-body text-[9px] font-bold uppercase tracking-wider">
-                    Accès bêta
+                    {dashboardPlan === 'starter' ? 'Accès bêta' : 'Abonnement actif'}
                   </div>
                   <p className="mt-3 font-body text-xs leading-relaxed text-slate-500">
-                    Pour lancer vos premiers visuels et tester la création d&apos;affiches avec Tifo.
+                    {dashboardPlan === 'starter'
+                      ? 'Pour lancer vos premiers visuels et tester la création d\'affiches avec Tifo.'
+                      : dashboardPlan === 'pro'
+                        ? 'Votre plan Pro est actif. Débloquez Club pour gérer plusieurs équipes.'
+                        : 'Merci, votre plan Club est actif. Vous avez accès à l\'expérience complète.'}
                   </p>
-                  <Link
-                    href="/#pricing"
-                    className="mt-4 block w-full bg-green-700 px-3 py-2 text-center font-body text-xs font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
-                  >
-                    Upgrade vers Pro
-                  </Link>
+                  {nextUpgrade ? (
+                    <Link
+                      href={nextUpgrade.href}
+                      className="mt-4 block w-full bg-green-700 px-3 py-2 text-center font-body text-xs font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
+                    >
+                      {nextUpgrade.cta}
+                    </Link>
+                  ) : (
+                    <p className="mt-4 text-center font-body text-xs font-semibold uppercase tracking-[0.12em] text-green-500">
+                      Merci pour votre confiance
+                    </p>
+                  )}
                 </div>
 
                 {/* Quota */}
@@ -120,20 +152,16 @@ export default function DashboardPage() {
                   <p className="font-body text-xs text-slate-500">
                     affiche{posters.length !== 1 ? 's' : ''} récente{posters.length !== 1 ? 's' : ''}
                   </p>
-                  <div className="mt-3 grid grid-cols-3 gap-1">
-                    <div>
-                      <p className="font-display text-xl text-white">{posters.length}</p>
-                      <p className="font-body text-[9px] uppercase tracking-wider text-slate-600">Générées</p>
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-between border border-green-900/30 bg-green-950/20 px-2.5 py-2">
+                      <p className="font-body text-[10px] uppercase tracking-[0.14em] text-slate-500">Générées ce mois</p>
+                      <p className="font-display text-lg text-white">{posters.length}</p>
                     </div>
-                    <div>
-                      <p className="font-display text-xl text-white">{new Date().getDate()}</p>
-                      <p className="font-body text-[9px] uppercase tracking-wider text-slate-600">
-                        {new Date().toLocaleString('fr-FR', { month: 'short' }).toUpperCase()}
+                    <div className="flex items-center justify-between border border-green-900/30 bg-green-950/20 px-2.5 py-2">
+                      <p className="font-body text-[10px] uppercase tracking-[0.14em] text-slate-500">Dernière visite</p>
+                      <p className="font-body text-xs font-semibold uppercase tracking-[0.08em] text-white">
+                        {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </p>
-                    </div>
-                    <div>
-                      <p className="font-display text-xl text-white">{new Date().getFullYear()}</p>
-                      <p className="font-body text-[9px] uppercase tracking-wider text-slate-600">Visite</p>
                     </div>
                   </div>
                 </div>
@@ -152,20 +180,20 @@ export default function DashboardPage() {
               </div>
 
               {/* Upgrade panel */}
-              {(quota?.plan === 'starter' || !quota) && (
+              {nextUpgrade && (
                 <div className="flex-1 p-5" style={{ background: 'rgba(5,46,22,0.25)', border: '1px solid rgba(22,163,74,0.3)' }}>
                   <div className="mb-3 flex items-start justify-between">
                     <div>
                       <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-600">Upgrade conseillé</p>
-                      <p className="font-display text-3xl uppercase text-white">Pro</p>
+                      <p className="font-display text-3xl uppercase text-white">{nextUpgrade.target}</p>
                     </div>
                     <div className="badge-beta rounded-lg px-2 py-0.5 font-body text-[9px] font-bold uppercase tracking-wider">Plan supérieur</div>
                   </div>
                   <p className="font-body text-xs text-slate-400">
-                    Pour les créateurs et journalistes qui publient régulièrement.
+                    {nextUpgrade.description}
                   </p>
                   <ul className="mt-4 space-y-2">
-                    {['Affiches illimitées', 'Tous les formats réseaux', 'Sans filigrane', 'Export PNG + JPG HD'].map((f) => (
+                    {nextUpgrade.features.map((f) => (
                       <li
                         key={f}
                         className="flex items-center gap-2 p-2.5 relative border border-green-900/40"
@@ -179,11 +207,29 @@ export default function DashboardPage() {
                     ))}
                   </ul>
                   <Link
-                    href="/#pricing"
+                    href={nextUpgrade.href}
                     className="mt-5 block w-full bg-green-700 py-2.5 text-center font-body text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-green-600 transition-colors"
                   >
-                    Upgrade vers Pro
+                    {nextUpgrade.cta}
                   </Link>
+                </div>
+              )}
+
+              {isClubPlan && (
+                <div className="flex-1 p-5" style={{ background: 'rgba(5,46,22,0.25)', border: '1px solid rgba(22,163,74,0.3)' }}>
+                  <div className="mb-3 flex items-start justify-between">
+                    <div>
+                      <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-600">Plan premium actif</p>
+                      <p className="font-display text-3xl uppercase text-white">Club</p>
+                    </div>
+                    <div className="badge-beta rounded-lg px-2 py-0.5 font-body text-[9px] font-bold uppercase tracking-wider">Merci</div>
+                  </div>
+                  <p className="font-body text-xs leading-relaxed text-slate-400">
+                    Merci pour votre confiance. Votre accès Club est actif avec toutes les fonctionnalités avancées.
+                  </p>
+                  <p className="mt-5 text-center font-body text-xs font-black uppercase tracking-[0.18em] text-green-500">
+                    On est ravis de vous compter parmi les clubs partenaires
+                  </p>
                 </div>
               )}
             </div>
