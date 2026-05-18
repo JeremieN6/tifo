@@ -249,7 +249,7 @@ async function fetchApiFootballLogo(nameCandidates: string[]) {
   const baseUrl = useRapidApi
     ? 'https://api-football-v1.p.rapidapi.com/v3/teams'
     : 'https://v3.football.api-sports.io/teams';
-  const headers = useRapidApi
+  const headers: Record<string, string> = useRapidApi
     ? {
         'x-rapidapi-key': RAPID_API_KEY,
         'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
