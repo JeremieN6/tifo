@@ -66,7 +66,7 @@ export default function FooterSection() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 pt-8 sm:flex-row" style={{ borderTop: '1px solid rgba(22, 163, 74, 0.08)' }}>
           <p className="font-body text-xs text-slate-600">© {year} Tifo · Sassify. Tous droits réservés.</p>
-          <p className="scoreboard font-body text-xs text-slate-700 tracking-[0.2em]">TIFO / GENERATEUR D&apos;AFFICHES / LAUNCH</p>
+          <p className="scoreboard font-body text-xs text-slate-700 tracking-[0.2em]">TIFO / GENERATEUR D&apos;AFFICHES / LANCEMENT</p>
         </div>
       </div>
     </footer>

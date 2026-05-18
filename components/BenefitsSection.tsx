@@ -33,7 +33,7 @@ const benefits = [
       </svg>
     ),
     title: 'Multi-format réseaux',
-    desc: 'Instagram carré, story verticale, bannière X/Twitter, vignette YouTube — une seule affiche, tous les formats.',
+    desc: 'Instagram carré, story verticale, bannière X/Twitter, vignette YouTube, une seule affiche, tous les formats.',
   },
 ];
 

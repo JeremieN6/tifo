@@ -1,8 +1,12 @@
 'use client';
 import Link from 'next/link';
+import { useState } from 'react';
 
 const proPaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO ?? '/#pricing';
 const clubPaymentLink = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_CLUB ?? '/#pricing';
+// TODO Stripe annuel: remplacer ces placeholders par vos Payment Links annuels réels.
+const proPaymentLinkAnnual = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PRO_ANNUAL ?? '/#pricing';
+const clubPaymentLinkAnnual = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_CLUB_ANNUAL ?? '/#pricing';
 
 const checkIcon = (
   <svg aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-green-500" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} viewBox="0 0 16 16">
@@ -33,7 +37,8 @@ const plans = [
       { text: 'Support prioritaire', included: false },
     ],
     cta: 'Créer un compte',
-    href: '/auth/register',
+    monthlyHref: '/auth/register',
+    annualHref: '/auth/register',
     highlighted: false,
   },
   {
@@ -52,7 +57,8 @@ const plans = [
       { text: 'Export personnalisé', included: false },
     ],
     cta: 'Choisir Pro',
-    href: proPaymentLink,
+    monthlyHref: proPaymentLink,
+    annualHref: proPaymentLinkAnnual,
     highlighted: true,
   },
   {
@@ -69,12 +75,30 @@ const plans = [
       { text: 'Support dédié', included: true },
     ],
     cta: 'Choisir Club',
-    href: clubPaymentLink,
+    monthlyHref: clubPaymentLink,
+    annualHref: clubPaymentLinkAnnual,
     highlighted: false,
   },
 ];
 
 export default function PricingSection() {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const isAnnual = billingCycle === 'annual';
+
+  function getPriceDisplay(planName: string, fallbackPrice: string) {
+    if (!isAnnual) return fallbackPrice;
+    if (planName === 'Pro') return '7,20€';
+    if (planName === 'Club') return '23,20€';
+    return fallbackPrice;
+  }
+
+  function getAnnualNote(planName: string) {
+    if (!isAnnual) return null;
+    if (planName === 'Pro') return '86,40€/an facturé annuellement';
+    if (planName === 'Club') return '278,40€/an facturé annuellement';
+    return null;
+  }
+
   return (
     <section className="relative z-10 py-24 md:py-32" id="pricing">
       <div className="section-divider" />
@@ -109,6 +133,29 @@ export default function PricingSection() {
             Le plan Starter reste gratuit pour lancer vos premiers visuels. Les plans Pro et Club affichent des{' '}
             <strong className="text-slate-300">prix fondateurs</strong> réservés aux premiers clients.
           </p>
+
+          <div className="mt-8 inline-flex items-center gap-1 p-1" style={{ background: 'rgba(5, 46, 22, 0.35)', border: '1px solid rgba(22, 163, 74, 0.28)' }}>
+            <button
+              type="button"
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-4 py-2 font-body text-xs font-black uppercase tracking-[0.16em] transition-colors ${
+                billingCycle === 'monthly' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+              style={billingCycle === 'monthly' ? { background: 'rgba(22, 163, 74, 0.35)' } : undefined}
+            >
+              Mensuel
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle('annual')}
+              className={`px-4 py-2 font-body text-xs font-black uppercase tracking-[0.16em] transition-colors ${
+                billingCycle === 'annual' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+              style={billingCycle === 'annual' ? { background: 'rgba(22, 163, 74, 0.35)' } : undefined}
+            >
+              Annuel
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -135,9 +182,14 @@ export default function PricingSection() {
 
               <div className="mt-4">
                 <div className="flex items-end gap-2">
-                  <span className="font-display text-4xl text-white" style={{ letterSpacing: '-0.02em' }}>{plan.price}</span>
+                  <span className="font-display text-4xl text-white" style={{ letterSpacing: '-0.02em' }}>
+                    {getPriceDisplay(plan.name, plan.price)}
+                  </span>
                   <span className="mb-1 font-body text-sm text-slate-500">/ mois</span>
                 </div>
+                {getAnnualNote(plan.name) && (
+                  <p className="mt-1 font-body text-[11px] text-slate-400">{getAnnualNote(plan.name)}</p>
+                )}
                 <div
                   className="mt-2 inline-block px-2 py-1 font-body text-[10px] font-bold uppercase tracking-wider"
                   style={{ background: 'rgba(22, 163, 74, 0.1)', border: '1px solid rgba(22, 163, 74, 0.25)', color: 'rgba(22, 163, 74, 0.9)' }}
@@ -161,7 +213,7 @@ export default function PricingSection() {
 
               <div className="mt-8">
                 <Link
-                  href={plan.href}
+                  href={isAnnual ? plan.annualHref : plan.monthlyHref}
                   className={`group relative flex w-full items-center justify-center overflow-hidden px-6 py-3.5 font-body text-sm font-black uppercase tracking-[0.2em] transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 ${
                     plan.highlighted
                       ? 'bg-green-700 text-white hover:bg-green-600 cta-pulse'

@@ -21,7 +21,7 @@ const steps = [
       </svg>
     ),
     title: 'Tifo génère l\'affiche',
-    desc: 'En quelques secondes, l\'IA choisit l\'ambiance, la composition et le style adaptés à l\'importance du match.',
+    desc: 'En quelques secondes, Tifo choisit l\'ambiance, la composition et le style adaptés à l\'importance du match.',
     note: 'Finale ? Ambiance épique. Derby ? Tension maximale. Chaque match a sa mise en scène.',
     bg: 'rgba(5, 46, 22, 0.2)',
     numberColor: 'rgba(22, 163, 74, 0.12)',

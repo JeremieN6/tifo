@@ -47,7 +47,7 @@ const features = [
       </svg>
     ),
     title: 'Pour tous les niveaux',
-    desc: 'Du club de district à la Ligue 2, du journaliste indépendant au streamer de 50k abonnés — Tifo s\'adapte à tout le monde.',
+    desc: 'Du club de district à la Ligue 2, du journaliste indépendant au streamer de 50k abonnés, Tifo s\'adapte à tout le monde.',
   },
   {
     tag: 'Tous segments',

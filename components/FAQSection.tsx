@@ -4,7 +4,7 @@ import { useState } from 'react';
 const faqs = [
   {
     q: 'Le plan Starter est-il vraiment gratuit ?',
-    a: 'Oui. Le plan Starter est offert au lancement pour les 200 premiers comptes et donne droit à 5 affiches par mois sans carte bancaire. Les plans Pro et Club débloquent un usage illimité via Stripe.',
+    a: 'Oui. Le plan Starter est offert au lancement pour les 200 premiers comptes et donne droit à 5 affiches par mois sans carte bancaire. Les plans Pro et Club débloquent un usage illimité.',
   },
   {
     q: 'Quels formats d\'affiche sont disponibles ?',
