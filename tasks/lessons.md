@@ -34,3 +34,9 @@
 **Cause racine** : Le backend utilisait `P18` comme fallback quand la propriete logo `P154` etait absente dans Wikidata.
 **Solution** : Supprimer le fallback `P18` et ne retourner un visuel que s il s agit d un vrai logo.
 **Regle** : Pour un champ logo/blason, n utiliser que des proprietes explicitement typées logo ou blason. Une absence de logo est preferable a une mauvaise image.
+
+### [2026-05-13] Un provider tiers ne doit jamais etre accepte sur son premier resultat brut
+**Probleme** : TheSportsDB renvoyait Arsenal quel que soit le club demande, ce qui polluait les logos.
+**Cause racine** : Le provider etait interroge sans verifier strictement que le club retourne correspondait bien au club selectionne via Wikidata.
+**Solution** : Introduire un matching strict sur le nom canonique et ses alias avant d accepter un logo tiers, puis tomber sur le provider suivant ou sur un placeholder.
+**Regle** : Tout fallback de donnees tiers doit etre valide contre l identite canonique de l entite source avant d etre affiche a l utilisateur.

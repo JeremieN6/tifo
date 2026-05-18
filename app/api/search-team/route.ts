@@ -7,6 +7,12 @@ interface WikidataSearchResult {
   aliases?: string[];
 }
 
+interface SportsDbTeam {
+  strTeam?: string;
+  strTeamAlternate?: string;
+  strBadge?: string;
+}
+
 interface WikidataEntity {
   claims?: Record<string, Array<{
     mainsnak?: {
@@ -15,6 +21,15 @@ interface WikidataEntity {
       };
     };
   }>>;
+}
+
+interface ApiFootballTeamResponse {
+  response?: Array<{
+    team?: {
+      name?: string;
+      logo?: string;
+    };
+  }>;
 }
 
 const CLUB_DESCRIPTION_PATTERNS = [
@@ -26,6 +41,29 @@ const CLUB_DESCRIPTION_PATTERNS = [
   'football team',
 ];
 
+const CLUB_NAME_STOP_WORDS = new Set([
+  'ac',
+  'afc',
+  'as',
+  'association',
+  'athletique',
+  'cf',
+  'club',
+  'es',
+  'fc',
+  'football',
+  'osc',
+  'sc',
+  'soccer',
+  'sporting',
+  'ss',
+  'team',
+  'us',
+]);
+
+const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY ?? process.env.APISPORTS_KEY ?? '';
+const RAPID_API_KEY = process.env.RAPIDAPI_KEY ?? '';
+
 function normalize(value: string) {
   return value
     .normalize('NFD')
@@ -33,6 +71,92 @@ function normalize(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+}
+
+function dedupe(values: string[]) {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function simplifyClubName(value: string) {
+  return normalize(value)
+    .split(' ')
+    .filter(Boolean)
+    .filter((token) => !CLUB_NAME_STOP_WORDS.has(token));
+}
+
+function splitAlternativeNames(value?: string) {
+  return (value ?? '')
+    .split(/[;,]/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function buildCommonsFileUrl(fileName?: string) {
+  if (!fileName) {
+    return '';
+  }
+
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}`;
+}
+
+function getClaimFileName(entity: WikidataEntity | undefined, property: string) {
+  const value = entity?.claims?.[property]?.[0]?.mainsnak?.datavalue?.value;
+  return typeof value === 'string' ? value : '';
+}
+
+function isSameClub(candidateName: string | undefined, expectedNames: string[]) {
+  if (!candidateName) {
+    return false;
+  }
+
+  const candidateNormalized = normalize(candidateName);
+  const candidateTokens = simplifyClubName(candidateName);
+
+  return expectedNames.some((expectedName) => {
+    const expectedNormalized = normalize(expectedName);
+    const expectedTokens = simplifyClubName(expectedName);
+
+    if (candidateNormalized === expectedNormalized) {
+      return true;
+    }
+
+    if (expectedTokens.length === 0 || candidateTokens.length === 0) {
+      return false;
+    }
+
+    const expectedCovered = expectedTokens.every((token) => candidateTokens.includes(token));
+    const candidateCovered = candidateTokens.every((token) => expectedTokens.includes(token));
+    return expectedCovered || candidateCovered;
+  });
+}
+
+function buildNameCandidates(result: WikidataSearchResult) {
+  const rawNames = dedupe([result.label ?? '', ...(result.aliases ?? [])]);
+  const variants: string[] = [];
+
+  for (const rawName of rawNames) {
+    const trimmedName = rawName.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!trimmedName) {
+      continue;
+    }
+
+    variants.push(trimmedName);
+
+    if (/\bfootball club\b/i.test(trimmedName)) {
+      variants.push(trimmedName.replace(/\bfootball club\b/gi, 'FC').replace(/\s+/g, ' ').trim());
+    }
+
+    if (/\bfc\b/i.test(trimmedName)) {
+      variants.push(trimmedName.replace(/\bfc\b/gi, 'Football Club').replace(/\s+/g, ' ').trim());
+    }
+
+    const simplifiedName = simplifyClubName(trimmedName).join(' ');
+    if (simplifiedName) {
+      variants.push(simplifiedName);
+    }
+  }
+
+  return dedupe(variants);
 }
 
 function isClubResult(result: WikidataSearchResult) {
@@ -67,16 +191,6 @@ function scoreResult(result: WikidataSearchResult, rawQuery: string) {
   return score;
 }
 
-function buildCommonsFileUrl(fileName?: string) {
-  if (!fileName) return '';
-  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}`;
-}
-
-function getClaimFileName(entity: WikidataEntity | undefined, property: string) {
-  const value = entity?.claims?.[property]?.[0]?.mainsnak?.datavalue?.value;
-  return typeof value === 'string' ? value : '';
-}
-
 async function searchWikidata(term: string) {
   const url = new URL('https://www.wikidata.org/w/api.php');
   url.searchParams.set('action', 'wbsearchentities');
@@ -97,7 +211,84 @@ async function searchWikidata(term: string) {
   return (data.search ?? []) as WikidataSearchResult[];
 }
 
-async function fetchEntityMedia(ids: string[]) {
+async function fetchSportsDbLogo(nameCandidates: string[]) {
+  for (const candidate of nameCandidates) {
+    try {
+      const url = new URL('https://www.thesportsdb.com/api/v1/json/3/searchteams.php');
+      url.searchParams.set('t', candidate);
+
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) {
+        continue;
+      }
+
+      const data = await response.json();
+      const teams = (data.teams ?? []) as SportsDbTeam[];
+      const match = teams.find((team) => {
+        const providerNames = [team.strTeam ?? '', ...splitAlternativeNames(team.strTeamAlternate)];
+        return providerNames.some((providerName) => isSameClub(providerName, nameCandidates)) && !!team.strBadge;
+      });
+
+      if (match?.strBadge) {
+        return match.strBadge;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return '';
+}
+
+async function fetchApiFootballLogo(nameCandidates: string[]) {
+  if (!API_FOOTBALL_KEY && !RAPID_API_KEY) {
+    return '';
+  }
+
+  const useRapidApi = !API_FOOTBALL_KEY && !!RAPID_API_KEY;
+  const baseUrl = useRapidApi
+    ? 'https://api-football-v1.p.rapidapi.com/v3/teams'
+    : 'https://v3.football.api-sports.io/teams';
+  const headers = useRapidApi
+    ? {
+        'x-rapidapi-key': RAPID_API_KEY,
+        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+      }
+    : {
+        'x-apisports-key': API_FOOTBALL_KEY,
+      };
+
+  for (const candidate of nameCandidates) {
+    try {
+      const url = new URL(baseUrl);
+      url.searchParams.set('search', candidate);
+
+      const response = await fetch(url, {
+        cache: 'no-store',
+        headers,
+      });
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const data = (await response.json()) as ApiFootballTeamResponse;
+      const match = (data.response ?? []).find((entry) => {
+        return isSameClub(entry.team?.name, nameCandidates) && !!entry.team?.logo;
+      });
+
+      if (match?.team?.logo) {
+        return match.team.logo;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return '';
+}
+
+async function fetchWikidataLogos(ids: string[]) {
   if (ids.length === 0) {
     return new Map<string, string>();
   }
@@ -109,22 +300,29 @@ async function fetchEntityMedia(ids: string[]) {
   url.searchParams.set('ids', ids.join('|'));
 
   const response = await fetch(url, { cache: 'no-store' });
-
   if (!response.ok) {
     return new Map<string, string>();
   }
 
   const data = await response.json();
   const entities = (data.entities ?? {}) as Record<string, WikidataEntity>;
-  const mediaById = new Map<string, string>();
+  const logoById = new Map<string, string>();
 
   for (const id of ids) {
-    const entity = entities[id];
-    const fileName = getClaimFileName(entity, 'P154');
-    mediaById.set(id, buildCommonsFileUrl(fileName));
+    logoById.set(id, buildCommonsFileUrl(getClaimFileName(entities[id], 'P154')));
   }
 
-  return mediaById;
+  return logoById;
+}
+
+async function resolveTeamLogo(result: WikidataSearchResult, wikidataLogo = '') {
+  const nameCandidates = buildNameCandidates(result);
+
+  if (nameCandidates.length === 0) {
+    return wikidataLogo;
+  }
+
+  return (await fetchSportsDbLogo(nameCandidates)) || (await fetchApiFootballLogo(nameCandidates)) || wikidataLogo;
 }
 
 export async function GET(req: NextRequest) {
@@ -170,14 +368,15 @@ export async function GET(req: NextRequest) {
       .sort((left, right) => right.score - left.score)
       .slice(0, 5);
 
-    const mediaById = await fetchEntityMedia(topResults.map((result) => result.id));
-    const teams = topResults.map((result) => ({
+    const wikidataLogos = await fetchWikidataLogos(topResults.map((result) => result.id));
+
+    const teams = await Promise.all(topResults.map(async (result) => ({
       id: result.id,
       name: result.label ?? '',
-      logo: mediaById.get(result.id) ?? '',
+      logo: await resolveTeamLogo(result, wikidataLogos.get(result.id) ?? ''),
       country: '',
       league: '',
-    }));
+    })));
 
     return NextResponse.json({ teams });
   } catch (err) {

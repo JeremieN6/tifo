@@ -59,6 +59,34 @@ const EVENT_TYPES = [
 const MAX_DESC = 1500;
 const TOTAL_STEPS = 5;
 
+function LogoPlaceholder({ size, className = '' }: { size: number; className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 96 112"
+      width={size}
+      height={size}
+      className={className}
+      fill="none"
+    >
+      <path
+        d="M48 6 82 18v35c0 23-15 41-34 53C29 94 14 76 14 53V18L48 6Z"
+        fill="currentColor"
+        fillOpacity="0.14"
+        stroke="currentColor"
+        strokeWidth="6"
+      />
+      <circle cx="48" cy="41" r="11" fill="currentColor" fillOpacity="0.3" stroke="none" />
+      <path
+        d="M30 76c4-12 14-18 18-18s14 6 18 18"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="8"
+      />
+    </svg>
+  );
+}
+
 // Plain team input with autocomplete (no inline logo preview)
 function TeamInput({
   label,
@@ -150,7 +178,11 @@ function TeamInput({
               onClick={() => select(t.name, t.logo)}
               className="flex w-full items-center gap-3 px-4 py-2.5 text-left font-body text-sm text-white hover:bg-green-900/20"
             >
-              {t.logo && <img src={t.logo} alt={t.name} width={24} height={24} className="object-contain" loading="lazy" />}
+              {t.logo ? (
+                <img src={t.logo} alt={t.name} width={24} height={24} className="object-contain" loading="lazy" />
+              ) : (
+                <LogoPlaceholder size={24} className="h-6 w-6 text-slate-600" />
+              )}
               {t.name}
             </button>
           ))}
@@ -713,7 +745,7 @@ export default function CreatePage() {
                       {data.homeTeamLogo ? (
                         <img src={data.homeTeamLogo} alt={data.homeTeam} width={90} height={90} className="object-contain" loading="lazy" />
                       ) : (
-                        <p className="font-body text-xs text-slate-600">Aucun logo trouvé</p>
+                        <LogoPlaceholder size={90} className="h-[90px] w-[90px] text-slate-700" />
                       )}
                     </div>
                     <div className="flex" style={{ borderTop: '1px solid rgba(22,163,74,0.12)' }}>
@@ -751,7 +783,7 @@ export default function CreatePage() {
                       {data.awayTeamLogo ? (
                         <img src={data.awayTeamLogo} alt={data.awayTeam} width={90} height={90} className="object-contain" loading="lazy" />
                       ) : (
-                        <p className="font-body text-xs text-slate-600">Aucun logo trouvé</p>
+                        <LogoPlaceholder size={90} className="h-[90px] w-[90px] text-slate-700" />
                       )}
                     </div>
                     <div className="flex" style={{ borderTop: '1px solid rgba(22,163,74,0.12)' }}>
