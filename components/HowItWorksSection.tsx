@@ -8,7 +8,7 @@ const steps = [
       </svg>
     ),
     title: 'Renseigne le match',
-    desc: 'Équipes, compétition, date et enjeu. Tifo comprend automatiquement le contexte — derby, finale, match décisif.',
+    desc: 'Équipes, compétition, date et enjeu. Tifo comprend automatiquement le contexte, derby, finale, match décisif. Que tu joues en district ou en Nationale 3, Tifo s\'adapte.',
     note: 'Clubs amateurs, médias, créateurs : tout le monde peut le faire.',
     bg: 'rgba(5, 46, 22, 0.1)',
     numberColor: 'rgba(22, 163, 74, 0.07)',

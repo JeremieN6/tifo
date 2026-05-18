@@ -1,5 +1,15 @@
 const features = [
   {
+    tag: 'Amateur → Pro',
+    icon: (
+      <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    title: 'Pour tous les niveaux',
+    desc: 'Du club de quartier à la Ligue 1, du match amical à la finale de coupe régionale, Tifo produit des visuels à la hauteur de chaque moment.',
+  },
+  {
     tag: 'Clubs · Créateurs',
     icon: (
       <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -38,16 +48,6 @@ const features = [
     ),
     title: 'Couleurs de club',
     desc: 'Personnalise chaque affiche avec les couleurs officielles de ton équipe. L\'identité de ton club, au cœur du visuel.',
-  },
-  {
-    tag: 'Amateur → Pro',
-    icon: (
-      <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} viewBox="0 0 24 24">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-    title: 'Pour tous les niveaux',
-    desc: 'Du club de district à la Ligue 2, du journaliste indépendant au streamer de 50k abonnés, Tifo s\'adapte à tout le monde.',
   },
   {
     tag: 'Tous segments',

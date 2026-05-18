@@ -59,9 +59,9 @@ export default function HeroSection() {
           >
             Une affiche pro
             <br />
-            pour chaque
+            avant chaque
             <br />
-            <span className="text-gradient-green">match.</span>
+            <span className="text-gradient-green">match de ton club.</span>
           </h1>
 
           <p className="animate-slide-up-delay-2 mt-6 max-w-lg font-body text-base font-medium leading-relaxed text-slate-400 md:text-lg">
@@ -124,10 +124,10 @@ export default function HeroSection() {
                 className="font-display text-2xl text-white md:text-3xl"
                 style={{ letterSpacing: "0.05em" }}
               >
-                4
+                50+
               </span>
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-green-700">
-                Segments cibles
+                Clubs
               </span>
             </div>
             <div className="flex flex-col gap-1">
