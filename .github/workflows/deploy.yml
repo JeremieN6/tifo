@@ -35,12 +35,11 @@ jobs:
           cd /srv/saas/tifo || exit 1
           git fetch --all --prune
           git reset --hard origin/main
-          export NODE_ENV=production
-          npm ci
+          npm ci --include=dev
           npm run build
           if pm2 describe tifo > /dev/null 2>&1; then
             pm2 reload tifo --update-env
           else
-            pm2 start npm --name "tifo" -- run start
+            NODE_ENV=production pm2 start npm --name "tifo" -- run start
           fi
           EOF
