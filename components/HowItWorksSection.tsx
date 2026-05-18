@@ -45,7 +45,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section className="relative z-10 py-24 md:py-32">
+    <section className="relative z-10 py-24 md:py-32" id="how-it-works">
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="mb-16 flex flex-col items-center text-center">
           <div className="mb-4 flex items-center gap-2">

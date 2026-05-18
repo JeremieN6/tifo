@@ -60,6 +60,15 @@ export default function FooterSection() {
               </a>
               . Chaque affiche est générée par intelligence artificielle, en temps réel.
             </p>
+            <p className="mt-3 font-body text-sm text-slate-500">
+              Contact :{' '}
+              <a
+                className="text-slate-400 underline underline-offset-2 hover:text-green-500 transition-colors"
+                href="mailto:contact.tifo@sassify.fr"
+              >
+                contact.tifo@sassify.fr
+              </a>
+            </p>
           </div>
         </div>
 
