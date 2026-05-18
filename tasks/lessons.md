@@ -40,3 +40,9 @@
 **Cause racine** : Le provider etait interroge sans verifier strictement que le club retourne correspondait bien au club selectionne via Wikidata.
 **Solution** : Introduire un matching strict sur le nom canonique et ses alias avant d accepter un logo tiers, puis tomber sur le provider suivant ou sur un placeholder.
 **Regle** : Tout fallback de donnees tiers doit etre valide contre l identite canonique de l entite source avant d etre affiche a l utilisateur.
+
+### [2026-05-18] Verifier explicitement les exigences deja annoncees comme faites
+**Probleme** : Une demande initiale (quota Starter + formats verrouilles + pricing + FAQ) n etait pas integralement appliquee alors que la session avait continue sur un autre sujet.
+**Cause racine** : Absence de verification finale requirement-by-requirement apres les premiers changements.
+**Solution** : Relecture systematique des fichiers cibles, patch des ecarts restants et validation TypeScript avant confirmation.
+**Regle** : Ne jamais confirmer une demande multi-points sans check-list complete de chaque exigence dans le code.

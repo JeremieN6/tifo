@@ -56,6 +56,13 @@ const EVENT_TYPES = [
   { key: 'autre', label: 'Autre événement' },
 ] as const;
 
+const POSTER_FORMATS = [
+  { key: 'square_1_1', label: 'Carré 1:1', desc: 'Instagram post' },
+  { key: 'story_9_16', label: 'Story 9:16', desc: 'Instagram / TikTok story' },
+  { key: 'x_banner', label: 'Bannière X', desc: 'X/Twitter banner' },
+  { key: 'youtube_thumbnail', label: 'Thumbnail YouTube', desc: 'Miniature vidéo' },
+] as const;
+
 const MAX_DESC = 1500;
 const TOTAL_STEPS = 5;
 
@@ -252,6 +259,7 @@ export default function CreatePage() {
   const [generatedImage, setGeneratedImage] = useState('');
   const [genError, setGenError] = useState('');
   const [quota, setQuota] = useState<Quota | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<(typeof POSTER_FORMATS)[number]['key']>('square_1_1');
   const [retryingHome, setRetryingHome] = useState(false);
   const [retryingAway, setRetryingAway] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
@@ -285,6 +293,12 @@ export default function CreatePage() {
   useEffect(() => {
     fetch('/api/generation-quota').then((r) => { if (r.ok) r.json().then(setQuota); });
   }, []);
+
+  useEffect(() => {
+    if (quota?.plan === 'starter' && selectedFormat !== 'square_1_1') {
+      setSelectedFormat('square_1_1');
+    }
+  }, [quota?.plan, selectedFormat]);
 
   async function retryLogo(team: 'home' | 'away') {
     const name = team === 'home' ? data.homeTeam : data.awayTeam;
@@ -366,6 +380,7 @@ export default function CreatePage() {
     formData.append('style', data.style);
     formData.append('colors', data.colorMode === 'auto' ? 'auto' : `${data.homeColors}, ${data.awayColors}`);
     formData.append('description', data.description.slice(0, MAX_DESC));
+    formData.append('outputFormat', selectedFormat);
     formData.append('posterType', posterType);
     if (posterType === 'annonce') {
       formData.append('eventType', data.eventType);
@@ -420,6 +435,7 @@ export default function CreatePage() {
   ] as const;
 
   const isAnnouncement = posterType === 'annonce';
+  const isStarterPlan = quota?.plan === 'starter';
   const isTransferFlow = isAnnouncement && (data.eventType === 'recrutement' || data.eventType === 'transfert');
   const isFlexibleAnnouncement = isAnnouncement && !isTransferFlow;
   const requiresAwayTeam = !isAnnouncement || isTransferFlow;
@@ -990,7 +1006,63 @@ export default function CreatePage() {
                       <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">Ambiance</p>
                       <p className="mt-0.5 font-body text-sm text-white">{data.style}</p>
                     </div>
+                    <div>
+                      <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">Format</p>
+                      <p className="mt-0.5 font-body text-sm text-white">
+                        {POSTER_FORMATS.find((format) => format.key === selectedFormat)?.label ?? 'Carré 1:1'}
+                      </p>
+                    </div>
                   </div>
+                </div>
+
+                <div className="p-5" style={{ background: 'rgba(5,46,22,0.15)', border: '1px solid rgba(22,163,74,0.2)' }}>
+                  <p className="mb-4 font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-600">Format de sortie</p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {POSTER_FORMATS.map((format) => {
+                      const isLocked = isStarterPlan && format.key !== 'square_1_1';
+                      const isSelected = selectedFormat === format.key;
+
+                      return (
+                        <button
+                          key={format.key}
+                          type="button"
+                          disabled={isLocked}
+                          onClick={() => setSelectedFormat(format.key)}
+                          className={`relative p-4 text-left transition-all ${isLocked ? 'cursor-not-allowed opacity-70' : ''}`}
+                          style={{
+                            background: isSelected ? 'rgba(22,163,74,0.12)' : 'rgba(5,46,22,0.25)',
+                            border: isSelected ? '1px solid rgba(22,163,74,0.5)' : '1px solid rgba(22,163,74,0.2)',
+                          }}
+                        >
+                          <p className={`font-display text-sm uppercase ${isSelected ? 'text-green-400' : 'text-white'}`}>
+                            {format.label}
+                          </p>
+                          <p className="mt-1 font-body text-xs text-slate-400">{format.desc}</p>
+                          {isLocked && (
+                            <span className="mt-2 inline-flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300">
+                              <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v10H6z" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              Verrouillé sur Starter
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {isStarterPlan && (
+                    <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="font-body text-xs text-slate-400">
+                        Le plan Starter inclut uniquement le format carré (1:1).
+                      </p>
+                      <Link
+                        href="/api/stripe/checkout?plan=pro"
+                        className="inline-flex items-center justify-center bg-green-700 px-4 py-2 font-body text-[10px] font-black uppercase tracking-[0.16em] text-white hover:bg-green-600 transition-colors"
+                      >
+                        Débloquer tous les formats (Pro)
+                      </Link>
+                    </div>
+                  )}
                 </div>
 
                 {genError && (

@@ -11,7 +11,7 @@ export async function createUser(email: string, password: string, name?: string)
   // Créer l'accès Starter par défaut
   await pool.query(
     'INSERT INTO user_access (user_id, plan, quota_remaining, quota_total) VALUES ($1, $2, $3, $4)',
-    [user.id, 'starter', 5, 5]
+    [user.id, 'starter', 3, 3]
   );
   return user;
 }

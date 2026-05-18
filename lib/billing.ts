@@ -76,7 +76,7 @@ export async function getStripeCustomerIdByUserId(userId: string): Promise<strin
 
 export async function cancelPlan(userId: string): Promise<void> {
   await pool.query(
-    `UPDATE user_access SET plan = 'starter', quota_remaining = 5, quota_total = 5, updated_at = NOW()
+    `UPDATE user_access SET plan = 'starter', quota_remaining = 3, quota_total = 3, updated_at = NOW()
      WHERE user_id = $1`,
     [userId]
   );

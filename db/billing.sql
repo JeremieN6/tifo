@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS user_access (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   plan VARCHAR(50) DEFAULT 'starter',       -- 'starter', 'pro', 'club'
-  quota_remaining INTEGER DEFAULT 5,
-  quota_total INTEGER DEFAULT 5,
+  quota_remaining INTEGER DEFAULT 3,
+  quota_total INTEGER DEFAULT 3,
   stripe_customer_id VARCHAR(255),
   updated_at TIMESTAMP DEFAULT NOW()
 );

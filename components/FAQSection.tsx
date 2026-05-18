@@ -4,11 +4,11 @@ import { useState } from 'react';
 const faqs = [
   {
     q: 'Le plan Starter est-il vraiment gratuit ?',
-    a: 'Oui. Le plan Starter est offert au lancement pour les 200 premiers comptes et donne droit à 5 affiches par mois sans carte bancaire. Les plans Pro et Club débloquent un usage illimité.',
+    a: 'Oui. Le plan Starter est offert au lancement pour les 200 premiers comptes et donne droit à 3 affiches par mois sans carte bancaire. Les plans Pro et Club débloquent un usage illimité.',
   },
   {
     q: 'Quels formats d\'affiche sont disponibles ?',
-    a: 'Tifo génère des affiches au format carré (Instagram 1:1), story verticale (9:16 pour Instagram et TikTok), format paysage (16:9 pour YouTube/Twitter), et bannière de couverture Facebook. Pendant la bêta, les formats standard sont disponibles pour tous.',
+    a: 'Le plan Starter inclut le format carré (1:1). Les formats story 9:16, bannière X et thumbnail YouTube sont disponibles avec le plan Pro (et supérieurs).',
   },
   {
     q: 'Faut-il être graphiste pour utiliser Tifo ?',

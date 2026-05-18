@@ -36,7 +36,7 @@ const steps = [
       </svg>
     ),
     title: 'Télécharge et publie',
-    desc: 'Récupère ton affiche dans les formats adaptés à chaque réseau. Prête à publier, immédiatement.',
+    desc: 'Récupère ton affiche dans les formats adaptés à chaque réseau. Prête à être publiée, immédiatement.',
     note: 'Instagram, X/Twitter, TikTok, YouTube — tout y est.',
     bg: 'rgba(5, 46, 22, 0.1)',
     numberColor: 'rgba(22, 163, 74, 0.07)',

@@ -2,9 +2,9 @@ export const PLANS = {
   starter: {
     name: 'Starter',
     price: 0,
-    quota: 5,
+    quota: 3,
     label: 'Gratuit',
-    features: ['5 affiches/mois', 'Formats standard', 'Support communautaire'],
+    features: ['3 affiches/mois', 'Format carré uniquement', 'Support communautaire'],
   },
   pro: {
     name: 'Pro',
