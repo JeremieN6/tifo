@@ -48,7 +48,6 @@ const COMPETITIONS = [
 
 const EVENT_TYPES = [
   { key: 'match', label: 'Match' },
-  { key: 'recrutement', label: 'Recrutement' },
   { key: 'transfert', label: 'Transfert' },
   { key: 'tournoi', label: 'Tournoi' },
   { key: 'plateau', label: 'Plateau' },
@@ -141,7 +140,7 @@ function TeamInput({
         const data = await res.json();
         const teams = data.teams ?? [];
         setResults(teams);
-        onLogoChange(teams[0]?.logo ?? '');
+        onLogoChange(teams.find((teamResult: { logo?: string }) => teamResult.logo)?.logo ?? '');
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           setResults([]);
