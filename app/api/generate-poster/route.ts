@@ -6,6 +6,9 @@ import { savePosterHistory } from '@/lib/poster-history';
 import { put } from '@vercel/blob';
 import OpenAI from 'openai';
 
+const MAX_REFERENCE_IMAGES = 3;
+const MAX_REFERENCE_IMAGE_BYTES = 5 * 1024 * 1024;
+
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY ?? process.env.NANO_USER_OPENAI_API_KEY;
   if (!apiKey) {
@@ -75,7 +78,15 @@ export async function POST(req: NextRequest) {
     const style = formData.get('style') as string;
     const colors = formData.get('colors') as string;
     const description = (formData.get('description') as string ?? '').slice(0, 1500);
-    const referenceFile = formData.get('reference') as File | null;
+    const multiReferenceFiles = formData
+      .getAll('references')
+      .filter((value): value is File => value instanceof File && value.size > 0);
+    const legacyReference = formData.get('reference');
+    const referenceFiles = multiReferenceFiles.length > 0
+      ? multiReferenceFiles
+      : legacyReference instanceof File && legacyReference.size > 0
+        ? [legacyReference]
+        : [];
     const isAnnouncement = posterType === 'annonce';
     const isTransferEvent = isAnnouncement && (eventType === 'recrutement' || eventType === 'transfert');
 
@@ -91,25 +102,35 @@ export async function POST(req: NextRequest) {
 
     let imageB64: string;
 
-    if (referenceFile && referenceFile.size > 0) {
-      // Validation de l'image de référence
+    if (referenceFiles.length > 0) {
+      if (referenceFiles.length > MAX_REFERENCE_IMAGES) {
+        return NextResponse.json({ error: `Trop d'images de référence (max ${MAX_REFERENCE_IMAGES}).` }, { status: 400 });
+      }
+
+      // Validation des images de référence
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(referenceFile.type)) {
-        return NextResponse.json({ error: 'Format d\'image invalide (PNG, JPG ou WebP requis).' }, { status: 400 });
-      }
-      if (referenceFile.size > 5 * 1024 * 1024) {
-        return NextResponse.json({ error: 'Image trop volumineuse (max 5MB).' }, { status: 400 });
+      for (const referenceFile of referenceFiles) {
+        if (!allowedTypes.includes(referenceFile.type)) {
+          return NextResponse.json({ error: 'Format d\'image invalide (PNG, JPG ou WebP requis).' }, { status: 400 });
+        }
+        if (referenceFile.size > MAX_REFERENCE_IMAGE_BYTES) {
+          return NextResponse.json({ error: 'Image trop volumineuse (max 5MB/image).' }, { status: 400 });
+        }
       }
 
-      const bytes = await referenceFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const file = new File([buffer], referenceFile.name, { type: referenceFile.type });
+      const files = await Promise.all(
+        referenceFiles.map(async (referenceFile) => {
+          const bytes = await referenceFile.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          return new File([buffer], referenceFile.name, { type: referenceFile.type });
+        }),
+      );
 
-      const extendedPrompt = `${prompt}\n\nUne image de référence est fournie. Inspire-toi de son style graphique, sa palette de couleurs et sa composition. Ne reproduis PAS son contenu (logos, visages, textes). Applique ce style à l'affiche de match demandée.`;
+      const extendedPrompt = `${prompt}\n\n${files.length > 1 ? 'Des images de référence sont fournies.' : 'Une image de référence est fournie.'} Inspire-toi de leur style graphique, leur palette de couleurs et leur composition. Ne reproduis PAS leur contenu (logos, visages, textes). Applique ce style à l'affiche de match demandée.`;
 
       const response = await openai.images.edit({
         model: 'gpt-image-1',
-        image: file,
+        image: files,
         prompt: extendedPrompt,
         size: '1024x1536',
       });

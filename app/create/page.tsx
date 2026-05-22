@@ -21,8 +21,7 @@ interface MatchData {
   homeColors: string;
   awayColors: string;
   description: string;
-  referenceImage: File | null;
-  referencePreview: string;
+  referenceImages: { id: string; file: File; preview: string }[];
   homeScore: string;
   awayScore: string;
   isReturnLeg: boolean;
@@ -64,6 +63,9 @@ const POSTER_FORMATS = [
 ] as const;
 
 const MAX_DESC = 1500;
+const MAX_REFERENCE_IMAGES = 3;
+const MAX_REFERENCE_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_REFERENCE_TOTAL_BYTES = 12 * 1024 * 1024;
 const TOTAL_STEPS = 5;
 
 function LogoPlaceholder({ size, className = '' }: { size: number; className?: string }) {
@@ -253,6 +255,7 @@ export default function CreatePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const homeLogoInputRef = useRef<HTMLInputElement>(null);
   const awayLogoInputRef = useRef<HTMLInputElement>(null);
+  const referenceImagesRef = useRef<{ id: string; file: File; preview: string }[]>([]);
   const [step, setStep] = useState(0);
   const [posterType, setPosterType] = useState<'avant-match' | 'apres-match' | 'annonce' | ''>('');
   const [generating, setGenerating] = useState(false);
@@ -263,6 +266,10 @@ export default function CreatePage() {
   const [retryingHome, setRetryingHome] = useState(false);
   const [retryingAway, setRetryingAway] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  const [referenceUploadNotice, setReferenceUploadNotice] = useState<{
+    type: 'error' | 'success' | 'info';
+    message: string;
+  } | null>(null);
 
   const [data, setData] = useState<MatchData>({
     homeTeam: '',
@@ -279,8 +286,7 @@ export default function CreatePage() {
     homeColors: '#1d4ed8',
     awayColors: '#dc2626',
     description: '',
-    referenceImage: null,
-    referencePreview: '',
+    referenceImages: [],
     homeScore: '0',
     awayScore: '0',
     isReturnLeg: false,
@@ -299,6 +305,28 @@ export default function CreatePage() {
       setSelectedFormat('square_1_1');
     }
   }, [quota?.plan, selectedFormat]);
+
+  useEffect(() => {
+    referenceImagesRef.current = data.referenceImages;
+  }, [data.referenceImages]);
+
+  useEffect(() => {
+    return () => {
+      referenceImagesRef.current.forEach((item) => URL.revokeObjectURL(item.preview));
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!referenceUploadNotice) return;
+
+    const timeoutId = setTimeout(() => {
+      setReferenceUploadNotice(null);
+    }, 5000);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [referenceUploadNotice]);
 
   async function retryLogo(team: 'home' | 'away') {
     const name = team === 'home' ? data.homeTeam : data.awayTeam;
@@ -325,6 +353,27 @@ export default function CreatePage() {
     team === 'home' ? update({ homeTeamLogo: url }) : update({ awayTeamLogo: url });
   }
 
+  function clearReferenceImages() {
+    setData((prev) => {
+      prev.referenceImages.forEach((item) => URL.revokeObjectURL(item.preview));
+      return { ...prev, referenceImages: [] };
+    });
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setReferenceUploadNotice(null);
+  }
+
+  function removeReferenceImage(imageId: string) {
+    setData((prev) => {
+      const found = prev.referenceImages.find((item) => item.id === imageId);
+      if (found) URL.revokeObjectURL(found.preview);
+      return {
+        ...prev,
+        referenceImages: prev.referenceImages.filter((item) => item.id !== imageId),
+      };
+    });
+    setReferenceUploadNotice(null);
+  }
+
   // Resize image client-side
   async function resizeImage(file: File, maxPx = 512): Promise<File> {
     return new Promise((resolve) => {
@@ -348,22 +397,94 @@ export default function CreatePage() {
   }
 
   async function handleReferenceUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const selectedFiles = Array.from(e.target.files ?? []);
+    if (selectedFiles.length === 0) return;
+
+    const freeSlots = MAX_REFERENCE_IMAGES - data.referenceImages.length;
+    if (freeSlots <= 0) {
+      setReferenceUploadNotice({
+        type: 'error',
+        message: `Limite atteinte: ${MAX_REFERENCE_IMAGES} images de référence maximum.`,
+      });
+      e.target.value = '';
+      return;
+    }
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      alert('Format invalide. Utilisez PNG, JPG ou WebP.');
-      return;
+    const kept = selectedFiles.slice(0, freeSlots);
+    const skippedBySlots = selectedFiles.length - kept.length;
+    let skippedByType = 0;
+    let skippedBySize = 0;
+    const prepared: { id: string; file: File; preview: string }[] = [];
+
+    for (const file of kept) {
+      if (!allowed.includes(file.type)) {
+        skippedByType += 1;
+        continue;
+      }
+      if (file.size > MAX_REFERENCE_IMAGE_BYTES) {
+        skippedBySize += 1;
+        continue;
+      }
+      const resized = await resizeImage(file, 512);
+      prepared.push({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        file: resized,
+        preview: URL.createObjectURL(resized),
+      });
     }
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image trop volumineuse (max 5MB).');
+
+    if (prepared.length === 0) {
+      setReferenceUploadNotice({
+        type: 'error',
+        message: 'Aucune image valide. Utilisez PNG, JPG ou WebP (5MB max/image).',
+      });
+      e.target.value = '';
       return;
     }
 
-    const resized = await resizeImage(file, 512);
-    const preview = URL.createObjectURL(resized);
-    update({ referenceImage: resized, referencePreview: preview });
+    const existingBytes = data.referenceImages.reduce((sum, item) => sum + item.file.size, 0);
+    let nextBytes = existingBytes;
+    let skippedByTotalSize = 0;
+    const accepted: { id: string; file: File; preview: string }[] = [];
+
+    for (const item of prepared) {
+      if (nextBytes + item.file.size <= MAX_REFERENCE_TOTAL_BYTES) {
+        accepted.push(item);
+        nextBytes += item.file.size;
+      } else {
+        skippedByTotalSize += 1;
+        URL.revokeObjectURL(item.preview);
+      }
+    }
+
+    if (accepted.length === 0) {
+      setReferenceUploadNotice({
+        type: 'error',
+        message: 'Le total des images est trop élevé (max 12MB). Retire une image puis réessaie.',
+      });
+      e.target.value = '';
+      return;
+    }
+
+    update({
+      referenceImages: [...data.referenceImages, ...accepted],
+    });
+
+    const skippedTotal = skippedBySlots + skippedByType + skippedBySize + skippedByTotalSize;
+    if (skippedTotal > 0) {
+      setReferenceUploadNotice({
+        type: 'info',
+        message: `${accepted.length} image${accepted.length > 1 ? 's' : ''} ajoutée${accepted.length > 1 ? 's' : ''}. ${skippedTotal} fichier${skippedTotal > 1 ? 's ont été ignorés' : ' a été ignoré'} (limite, format ou taille).`,
+      });
+    } else {
+      setReferenceUploadNotice({
+        type: 'success',
+        message: `${accepted.length} image${accepted.length > 1 ? 's' : ''} ajoutée${accepted.length > 1 ? 's' : ''}.`,
+      });
+    }
+
+    e.target.value = '';
   }
 
   async function handleGenerate() {
@@ -389,8 +510,10 @@ export default function CreatePage() {
       formData.append('score', `${data.homeScore}-${data.awayScore}`);
       if (data.isReturnLeg) formData.append('isReturnLeg', 'true');
     }
-    if (data.referenceImage) {
-      formData.append('reference', data.referenceImage);
+    if (data.referenceImages.length > 0) {
+      data.referenceImages.forEach((item) => {
+        formData.append('references', item.file);
+      });
     }
 
     try {
@@ -493,7 +616,12 @@ export default function CreatePage() {
                 Télécharger l&apos;affiche
               </button>
               <button
-                onClick={() => { setStep(0); setGeneratedImage(''); setPosterType(''); update({ referenceImage: null, referencePreview: '' }); }}
+                onClick={() => {
+                  setStep(0);
+                  setGeneratedImage('');
+                  setPosterType('');
+                  clearReferenceImages();
+                }}
                 className="px-6 py-3 font-body text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors"
                 style={{ border: '1px solid rgba(22,163,74,0.3)' }}
               >
@@ -912,7 +1040,7 @@ export default function CreatePage() {
                     <span className="ml-2 font-normal text-slate-600">(optionnel)</span>
                   </label>
                   <p className="mb-2 font-body text-xs text-slate-600">
-                    Décris l&apos;affiche idéale en détail: ambiance, palette, lumière, composition, typographies ou références visuelles.
+                    Décris l&apos;affiche idéale en détail : ambiance, palette, lumière, composition, typographies. Tu peux aussi ajouter une ou plusieurs images de référence pour guider le style visuel.
                   </p>
                   <textarea
                     value={data.description}
@@ -927,11 +1055,87 @@ export default function CreatePage() {
                   </div>
                 </div>
 
-                {/* Reference image */}
+                {/* Reference images */}
                 <div>
+                  <div className="flex items-center justify-between gap-3" style={{ borderBottom: '1px solid rgba(22,163,74,0.12)', paddingBottom: '10px' }}>
+                    <p className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-green-600">
+                      Images de référence ({data.referenceImages.length}/{MAX_REFERENCE_IMAGES})
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {data.referenceImages.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={clearReferenceImages}
+                          className="font-body text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 hover:text-red-300 transition-colors"
+                        >
+                          Tout retirer
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-green-700 px-3 py-2 font-body text-[10px] font-black uppercase tracking-[0.14em] text-white hover:bg-green-600 transition-colors"
+                      >
+                        + Ajouter
+                      </button>
+                    </div>
+                  </div>
+                  <p className="mt-2 font-body text-xs text-slate-500">
+                    PNG, JPG, WebP. Max 5MB/image, 12MB au total.
+                  </p>
+                  {referenceUploadNotice && (
+                    <p
+                      className="mt-2 px-3 py-2 font-body text-xs"
+                      style={{
+                        background:
+                          referenceUploadNotice.type === 'error'
+                            ? 'rgba(153,27,27,0.2)'
+                            : referenceUploadNotice.type === 'success'
+                              ? 'rgba(22,163,74,0.18)'
+                              : 'rgba(15,23,42,0.45)',
+                        border:
+                          referenceUploadNotice.type === 'error'
+                            ? '1px solid rgba(248,113,113,0.45)'
+                            : referenceUploadNotice.type === 'success'
+                              ? '1px solid rgba(74,222,128,0.45)'
+                              : '1px solid rgba(148,163,184,0.35)',
+                        color:
+                          referenceUploadNotice.type === 'error'
+                            ? '#fca5a5'
+                            : referenceUploadNotice.type === 'success'
+                              ? '#86efac'
+                              : '#cbd5e1',
+                      }}
+                    >
+                      {referenceUploadNotice.message}
+                    </p>
+                  )}
+                  {data.referenceImages.length > 0 ? (
+                    <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {data.referenceImages.map((item, index) => (
+                        <div key={item.id} className="relative overflow-hidden" style={{ border: '1px solid rgba(22,163,74,0.2)' }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={item.preview} alt={`Référence ${index + 1}`} className="h-24 w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeReferenceImage(item.id)}
+                            className="absolute right-1 top-1 h-6 w-6 bg-black/70 text-xs text-white hover:bg-black"
+                            aria-label={`Supprimer la référence ${index + 1}`}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3 p-4 font-body text-xs text-slate-500" style={{ background: 'rgba(5,46,22,0.2)', border: '1px dashed rgba(22,163,74,0.25)' }}>
+                      Ajoute des visuels (style, textures, ambiance) pour mieux guider la génération.
+                    </div>
+                  )}
                   <input
                     ref={fileInputRef}
                     type="file"
+                    multiple
                     accept="image/png,image/jpeg,image/webp"
                     onChange={handleReferenceUpload}
                     className="hidden"
