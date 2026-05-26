@@ -8,11 +8,13 @@ export async function createUser(email: string, password: string, name?: string)
     [email.toLowerCase().trim(), hash, name ?? null]
   );
   const user = result.rows[0];
-  // Créer l'accès Starter par défaut
+  // Création par défaut en Starter. Les essais Club sont attribués manuellement au cas par cas.
   await pool.query(
-    'INSERT INTO user_access (user_id, plan, quota_remaining, quota_total) VALUES ($1, $2, $3, $4)',
-    [user.id, 'starter', 3, 3]
+    `INSERT INTO user_access (user_id, plan, quota_remaining, quota_total)
+     VALUES ($1, 'starter', 3, 3)`,
+    [user.id]
   );
+
   return user;
 }
 

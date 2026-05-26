@@ -8,6 +8,7 @@ interface Quota {
   plan: string;
   quota_remaining: number;
   quota_total: number;
+  trial_ends_at?: string | null;
 }
 
 interface PaymentEvent {
@@ -31,6 +32,14 @@ export default function AccountPage() {
   const [pwdMsg, setPwdMsg] = useState('');
   const [pwdError, setPwdError] = useState('');
   const [pwdLoading, setPwdLoading] = useState(false);
+  const trialEndsAt = quota?.trial_ends_at ? new Date(quota.trial_ends_at) : null;
+  const trialEndsAtLabel = trialEndsAt
+    ? trialEndsAt.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    : null;
 
   useEffect(() => {
     async function load() {
@@ -113,7 +122,9 @@ export default function AccountPage() {
                 </div>
               )}
               <p className="mt-2 font-body text-xs text-green-700">
-                Période active : {new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
+                {trialEndsAtLabel
+                  ? `Essai offert jusqu'au ${trialEndsAtLabel}`
+                  : `Période active : ${new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`}
               </p>
             </div>
 
@@ -241,8 +252,10 @@ export default function AccountPage() {
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   <div className="p-2.5" style={{ background: 'rgba(5,46,22,0.3)', border: '1px solid rgba(22,163,74,0.1)' }}>
-                    <p className="font-body text-[9px] font-bold uppercase tracking-wider text-slate-600">Activé le</p>
-                    <p className="font-body text-xs text-white">Compte gratuit</p>
+                    <p className="font-body text-[9px] font-bold uppercase tracking-wider text-slate-600">Statut</p>
+                    <p className="font-body text-xs text-white">
+                      {trialEndsAtLabel ? `Essai Club jusqu'au ${trialEndsAtLabel}` : 'Abonnement actif'}
+                    </p>
                   </div>
                   <div className="p-2.5" style={{ background: 'rgba(5,46,22,0.3)', border: '1px solid rgba(22,163,74,0.1)' }}>
                     <p className="font-body text-[9px] font-bold uppercase tracking-wider text-slate-600">Référence</p>

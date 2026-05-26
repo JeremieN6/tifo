@@ -52,3 +52,9 @@
 **Cause racine** : Le wizard repose sur Ink et demande un vrai TTY interactif ; en plus, Windows n expose pas toujours `unzip` dans le PATH.
 **Solution** : Installer Node 22.22.0, fournir un shim `unzip` dans `tools/`, puis reserver la validation finale a un terminal interactif humain.
 **Regle** : Ne pas tenter d automatiser un wizard Ink/TUI via redirection ou pipe ; verifier d abord qu un vrai terminal interactif est disponible, sinon utiliser uniquement les flags headless explicitement supportes.
+
+### [2026-05-26] Ne pas activer globalement une offre segmentee dans le signup
+**Probleme** : Le flux d inscription activait automatiquement 90 jours Club pour tous les nouveaux comptes alors que l offre devait etre reservee a certains profils (clubs cibles).
+**Cause racine** : Confusion entre mecanique produit et promesse commerciale segmentee ; absence de validation du perimetre d eligibilite avant implementation.
+**Solution** : Revenir a une creation par defaut en Starter et conserver l attribution du trial Club via action manuelle ciblee (SQL/backoffice).
+**Regle** : Toute offre acquisition reservee a un segment doit avoir un mecanisme d eligibilite explicite ; ne jamais l activer globalement au signup sans filtre metier.

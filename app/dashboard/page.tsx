@@ -8,6 +8,7 @@ interface Quota {
   plan: string;
   quota_remaining: number;
   quota_total: number;
+  trial_ends_at?: string | null;
 }
 
 interface Poster {
@@ -50,6 +51,14 @@ export default function DashboardPage() {
   const isUnlimited = quota?.quota_total === 999999;
   const dashboardPlan = quota?.plan ?? 'starter';
   const isClubPlan = dashboardPlan === 'club';
+  const trialEndsAt = quota?.trial_ends_at ? new Date(quota.trial_ends_at) : null;
+  const trialEndsAtLabel = trialEndsAt
+    ? trialEndsAt.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    : null;
 
   const nextUpgrade = dashboardPlan === 'starter'
     ? {
@@ -113,7 +122,9 @@ export default function DashboardPage() {
                       ? 'Pour lancer vos premiers visuels et tester la création d\'affiches avec Tifo.'
                       : dashboardPlan === 'pro'
                         ? 'Votre plan Pro est actif. Débloquez Club pour gérer plusieurs équipes.'
-                        : 'Merci, votre plan Club est actif. Vous avez accès à l\'expérience complète.'}
+                        : trialEndsAtLabel
+                          ? `Essai Club actif jusqu'au ${trialEndsAtLabel}.`
+                          : 'Merci, votre plan Club est actif. Vous avez accès à l\'expérience complète.'}
                   </p>
                   {nextUpgrade ? (
                     <Link
@@ -173,7 +184,9 @@ export default function DashboardPage() {
                 <p className="font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-600">Connecté en tant que</p>
                 <p className="mt-2 break-all font-body text-sm font-semibold text-white">{session?.user?.email}</p>
                 <p className="font-body text-xs text-slate-500">
-                  Période active : {new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
+                  {trialEndsAtLabel
+                    ? `Essai offert jusqu'au ${trialEndsAtLabel}`
+                    : `Période active : ${new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`}
                 </p>
               </div>
 

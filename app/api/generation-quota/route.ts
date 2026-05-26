@@ -18,5 +18,6 @@ export async function GET() {
     plan: access.plan,
     quota_remaining: access.quota_remaining,
     quota_total: access.quota_total,
+    trial_ends_at: access.trial_ends_at,
   });
 }

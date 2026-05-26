@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createUser } from '@/lib/users';
 import pool from '@/lib/db';
 import { captureServerEvent } from '@/lib/posthog-server';
+import { buildSignupWelcomeEmail, sendEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +28,19 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await createUser(email, password, name);
+
+    try {
+      const appUrl = req.nextUrl.origin;
+      await sendEmail({
+        to: user.email,
+        subject: 'Bienvenue sur Tifo',
+        html: buildSignupWelcomeEmail(user.name ?? user.email, appUrl),
+        text: 'Bienvenue sur Tifo. Votre compte est créé et prêt à l\'emploi.',
+      });
+    } catch (emailError) {
+      console.error('[signup/welcome-email]', emailError);
+    }
+
     captureServerEvent({
       distinctId: user.id,
       event: 'signup_succeeded',
