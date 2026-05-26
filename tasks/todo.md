@@ -5,7 +5,7 @@
 ---
 
 ## En cours
-- [ ] [Session] Finaliser `posthog wizard doctor/audit` sur poste non restreint (blocage unzip/proxy sur poste actuel)
+- [x] [Session] Finaliser `posthog wizard doctor/audit` sur poste non restreint (configuration validée; la dernière étape du wizard reste TTY interactif)
 - [x] [Session] Créer le blueprint dashboards PostHog (acquisition/activation/revenue)
 - [x] [Session] Ajouter PostHog client global (provider + pageviews + identify)
 - [x] [Session] Instrumenter les événements clés (signup/login/create/checkout/webhook)
@@ -40,3 +40,4 @@
 - [x] Base Neon provisionnée + tables créées
 - [x] Build de production validé (`npm run build`)
 - [x] Webhook Stripe sécurisé (vérification de signature)
+- [x] PostHog validé côté configuration projet (Node 22.22.0, `unzip` shim, doctor OK, audit TUI confirmé)

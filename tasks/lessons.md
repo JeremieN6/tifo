@@ -46,3 +46,9 @@
 **Cause racine** : Absence de verification finale requirement-by-requirement apres les premiers changements.
 **Solution** : Relecture systematique des fichiers cibles, patch des ecarts restants et validation TypeScript avant confirmation.
 **Regle** : Ne jamais confirmer une demande multi-points sans check-list complete de chaque exigence dans le code.
+
+### [2026-05-26] Wizard PostHog TUI non automatisable via task pipe sur Windows
+**Probleme** : `doctor` et `audit` du PostHog Wizard s arretent ou restent bloques quand ils sont lances via une task/pipeline non interactive.
+**Cause racine** : Le wizard repose sur Ink et demande un vrai TTY interactif ; en plus, Windows n expose pas toujours `unzip` dans le PATH.
+**Solution** : Installer Node 22.22.0, fournir un shim `unzip` dans `tools/`, puis reserver la validation finale a un terminal interactif humain.
+**Regle** : Ne pas tenter d automatiser un wizard Ink/TUI via redirection ou pipe ; verifier d abord qu un vrai terminal interactif est disponible, sinon utiliser uniquement les flags headless explicitement supportes.
