@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         const result = await pool.query(
-          'SELECT id, email, name, password_hash FROM users WHERE email = $1',
+          'SELECT id, email, name, password_hash, is_admin FROM users WHERE email = $1',
           [credentials.email.toLowerCase().trim()]
         );
 
@@ -34,11 +34,14 @@ export const authOptions: NextAuthOptions = {
           .split(',')
           .map((e) => e.trim().toLowerCase());
 
+        const isAdminFromDb = Boolean(user.is_admin);
+        const isAdminFromEnv = adminEmails.includes(user.email.toLowerCase());
+
         return {
           id: String(user.id),
           email: user.email,
           name: user.name ?? user.email,
-          isAdmin: adminEmails.includes(user.email.toLowerCase()),
+          isAdmin: isAdminFromDb || isAdminFromEnv,
         };
       },
     }),

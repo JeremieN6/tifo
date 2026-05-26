@@ -9,9 +9,11 @@ interface User {
   email: string;
   name: string | null;
   created_at: string;
+  is_admin: boolean;
   plan: string;
   quota_remaining: number;
   quota_total: number;
+  trial_ends_at: string | null;
 }
 
 interface Stats {
@@ -30,6 +32,12 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editQuota, setEditQuota] = useState('');
+  const [planLoadingUserId, setPlanLoadingUserId] = useState<number | null>(null);
+  const [emailLoadingUserId, setEmailLoadingUserId] = useState<number | null>(null);
+  const [adminLoadingUserId, setAdminLoadingUserId] = useState<number | null>(null);
+  const [selectedPlanByUser, setSelectedPlanByUser] = useState<Record<number, string>>({});
+  const [selectedTemplateByUser, setSelectedTemplateByUser] = useState<Record<number, string>>({});
+  const [feedback, setFeedback] = useState<string>('');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -61,6 +69,76 @@ export default function AdminPage() {
     setEditingId(null);
   }
 
+  async function updatePlan(userId: number) {
+    const selectedPlan = selectedPlanByUser[userId] ?? 'starter';
+    setPlanLoadingUserId(userId);
+    setFeedback('');
+
+    const res = await fetch('/api/admin/users', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, plan: selectedPlan }),
+    });
+
+    setPlanLoadingUserId(null);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ error: 'Erreur inconnue.' }));
+      setFeedback(data.error ?? 'Impossible de mettre à jour le plan.');
+      return;
+    }
+
+    const updatedUsers = await fetch('/api/admin/users');
+    if (updatedUsers.ok) {
+      setUsers(await updatedUsers.json());
+    }
+    setFeedback('Plan mis à jour.');
+  }
+
+  async function sendTemplate(userId: number) {
+    const template = selectedTemplateByUser[userId] ?? 'welcome';
+    setEmailLoadingUserId(userId);
+    setFeedback('');
+
+    const res = await fetch('/api/admin/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, template }),
+    });
+
+    setEmailLoadingUserId(null);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ error: 'Erreur inconnue.' }));
+      setFeedback(data.error ?? 'Impossible d\'envoyer l\'email.');
+      return;
+    }
+
+    setFeedback('Email envoyé.');
+  }
+
+  async function toggleAdmin(userId: number, nextValue: boolean) {
+    setAdminLoadingUserId(userId);
+    setFeedback('');
+
+    const res = await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, isAdmin: nextValue }),
+    });
+
+    setAdminLoadingUserId(null);
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ error: 'Erreur inconnue.' }));
+      setFeedback(data.error ?? 'Impossible de mettre à jour le rôle admin.');
+      return;
+    }
+
+    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_admin: nextValue } : u)));
+    setFeedback(nextValue ? 'Utilisateur promu admin.' : 'Utilisateur retiré des admins.');
+  }
+
   if (status === 'loading' || loading) {
     return <div className="flex min-h-screen items-center justify-center bg-[#020f07] text-white">Chargement…</div>;
   }
@@ -72,6 +150,11 @@ export default function AdminPage() {
       <Navbar />
       <main className="mx-auto max-w-7xl px-6 pb-16 pt-28 md:px-12">
         <h1 className="font-display text-4xl uppercase text-white mb-8">Administration</h1>
+        {feedback && (
+          <p className="mb-4 rounded border border-green-900/40 bg-green-950/20 px-4 py-2 text-sm text-green-300">
+            {feedback}
+          </p>
+        )}
 
         {/* Stats */}
         {stats && (
@@ -112,6 +195,8 @@ export default function AdminPage() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Email</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Plan</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Rôle</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Fin essai</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Quota restant</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Inscrit le</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Actions</th>
@@ -133,6 +218,18 @@ export default function AdminPage() {
                       {user.plan}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-xs">
+                    <span className={`rounded-full px-2 py-0.5 font-medium ${
+                      user.is_admin ? 'bg-green-900/40 text-green-300' : 'bg-gray-800 text-gray-400'
+                    }`}>
+                      {user.is_admin ? 'admin' : 'user'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-400">
+                    {user.trial_ends_at
+                      ? new Date(user.trial_ends_at).toLocaleDateString('fr-FR')
+                      : '—'}
+                  </td>
                   <td className="px-4 py-3 text-gray-300">
                     {editingId === user.id ? (
                       <div className="flex items-center gap-2">
@@ -153,12 +250,63 @@ export default function AdminPage() {
                     {new Date(user.created_at).toLocaleDateString('fr-FR')}
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => { setEditingId(user.id); setEditQuota(String(user.quota_remaining)); }}
-                      className="text-xs text-gray-500 hover:text-white transition-colors"
-                    >
-                      Modifier quota
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => { setEditingId(user.id); setEditQuota(String(user.quota_remaining)); }}
+                        className="text-xs text-gray-500 hover:text-white transition-colors"
+                      >
+                        Modifier quota
+                      </button>
+
+                      <select
+                        value={selectedPlanByUser[user.id] ?? user.plan}
+                        onChange={(e) => setSelectedPlanByUser((prev) => ({ ...prev, [user.id]: e.target.value }))}
+                        className="rounded border border-green-900/40 bg-[#020f07] px-2 py-1 text-xs text-white"
+                      >
+                        <option value="starter">starter</option>
+                        <option value="pro">pro</option>
+                        <option value="club">club</option>
+                        <option value="club_trial_90">club_trial_90j</option>
+                      </select>
+                      <button
+                        onClick={() => updatePlan(user.id)}
+                        disabled={planLoadingUserId === user.id}
+                        className="rounded border border-green-900/40 px-2 py-1 text-xs text-green-300 hover:bg-green-900/20 disabled:opacity-60"
+                      >
+                        {planLoadingUserId === user.id ? '...' : 'Appliquer plan'}
+                      </button>
+
+                      <select
+                        value={selectedTemplateByUser[user.id] ?? 'welcome'}
+                        onChange={(e) => setSelectedTemplateByUser((prev) => ({ ...prev, [user.id]: e.target.value }))}
+                        className="rounded border border-green-900/40 bg-[#020f07] px-2 py-1 text-xs text-white"
+                      >
+                        <option value="welcome">welcome</option>
+                        <option value="trial_welcome">trial_welcome</option>
+                        <option value="trial_reminder_7">trial_reminder_7</option>
+                        <option value="trial_ended">trial_ended</option>
+                      </select>
+                      <button
+                        onClick={() => sendTemplate(user.id)}
+                        disabled={emailLoadingUserId === user.id}
+                        className="rounded border border-green-900/40 px-2 py-1 text-xs text-green-300 hover:bg-green-900/20 disabled:opacity-60"
+                      >
+                        {emailLoadingUserId === user.id ? '...' : 'Envoyer email'}
+                      </button>
+
+                      <button
+                        onClick={() => toggleAdmin(user.id, !user.is_admin)}
+                        disabled={adminLoadingUserId === user.id || String(user.id) === session.user.id}
+                        className="rounded border border-green-900/40 px-2 py-1 text-xs text-green-300 hover:bg-green-900/20 disabled:opacity-60"
+                        title={String(user.id) === session.user.id ? 'Vous ne pouvez pas modifier votre propre rôle ici.' : ''}
+                      >
+                        {adminLoadingUserId === user.id
+                          ? '...'
+                          : user.is_admin
+                            ? 'Retirer admin'
+                            : 'Promouvoir admin'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
