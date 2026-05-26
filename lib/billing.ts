@@ -14,10 +14,36 @@ export async function getUserEmail(userId: string): Promise<string | null> {
 
 export async function getUserAccess(userId: string): Promise<UserAccess | null> {
   const result = await pool.query(
-    'SELECT plan, quota_remaining, quota_total, stripe_customer_id FROM user_access WHERE user_id = $1',
+    `SELECT plan, quota_remaining, quota_total, stripe_customer_id
+     FROM user_access
+     WHERE user_id = $1
+     ORDER BY updated_at DESC
+     LIMIT 1`,
     [userId]
   );
-  return result.rows[0] ?? null;
+
+  if (result.rows[0]) {
+    return result.rows[0];
+  }
+
+  // Backfill access for legacy/inconsistent accounts to avoid blocking generation.
+  await pool.query(
+    `INSERT INTO user_access (user_id, plan, quota_remaining, quota_total)
+     SELECT $1, 'starter', 3, 3
+     WHERE EXISTS (SELECT 1 FROM users WHERE id = $1)`,
+    [userId]
+  );
+
+  const fallback = await pool.query(
+    `SELECT plan, quota_remaining, quota_total, stripe_customer_id
+     FROM user_access
+     WHERE user_id = $1
+     ORDER BY updated_at DESC
+     LIMIT 1`,
+    [userId]
+  );
+
+  return fallback.rows[0] ?? null;
 }
 
 export async function decrementQuota(userId: string): Promise<void> {

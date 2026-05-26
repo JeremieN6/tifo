@@ -10,6 +10,54 @@ import { captureServerEvent } from '@/lib/posthog-server';
 const MAX_REFERENCE_IMAGES = 3;
 const MAX_REFERENCE_IMAGE_BYTES = 5 * 1024 * 1024;
 
+function toErrorMessage(value: unknown): string {
+  if (value instanceof Error) return value.message;
+  if (typeof value === 'string') return value;
+  return 'unknown_error';
+}
+
+function classifyGenerationError(err: unknown, stage: string) {
+  const message = toErrorMessage(err).toLowerCase();
+
+  if (message.includes('openai_api_key') || message.includes('api key')) {
+    return {
+      status: 500,
+      reason: 'missing_openai_api_key',
+      userMessage: 'Service de generation temporairement indisponible (configuration OpenAI).',
+    };
+  }
+
+  if (message.includes('blob_read_write_token')) {
+    return {
+      status: 500,
+      reason: 'missing_blob_token',
+      userMessage: 'Service de stockage temporairement indisponible. Reessayez plus tard.',
+    };
+  }
+
+  if (message.includes('rate limit') || message.includes('quota') || message.includes('insufficient_quota')) {
+    return {
+      status: 429,
+      reason: 'openai_rate_limited',
+      userMessage: 'Le service de generation est surcharge. Reessayez dans quelques instants.',
+    };
+  }
+
+  if (message.includes('connection') || message.includes('database')) {
+    return {
+      status: 503,
+      reason: 'database_unavailable',
+      userMessage: 'Service temporairement indisponible. Reessayez dans quelques instants.',
+    };
+  }
+
+  return {
+    status: 500,
+    reason: `server_error_${stage}`,
+    userMessage: 'Erreur lors de la generation. Reessayez.',
+  };
+}
+
 function getOpenAIClient(): OpenAI {
   const apiKey = process.env.OPENAI_API_KEY ?? process.env.NANO_USER_OPENAI_API_KEY;
   if (!apiKey) {
@@ -51,9 +99,18 @@ L'affiche doit être au format portrait (2:3), avec une hiérarchie visuelle cla
 }
 
 export async function POST(req: NextRequest) {
+  let stage = 'init';
+  let distinctIdForError = 'anonymous';
+
   try {
+    stage = 'openai_client';
     const openai = getOpenAIClient();
 
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      throw new Error('BLOB_READ_WRITE_TOKEN manquante');
+    }
+
+    stage = 'session';
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       captureServerEvent({
@@ -64,6 +121,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Connexion requise.' }, { status: 401 });
     }
 
+    distinctIdForError = session.user.id;
+
+    stage = 'access';
     const access = await getUserAccess(session.user.id);
     if (!access) {
       captureServerEvent({
@@ -83,6 +143,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Quota épuisé. Passez au plan Pro pour continuer.' }, { status: 429 });
     }
 
+    stage = 'parse_form';
     const formData = await req.formData();
     const homeTeam = formData.get('homeTeam') as string;
     const awayTeam = formData.get('awayTeam') as string;
@@ -154,6 +215,7 @@ export async function POST(req: NextRequest) {
 
       const extendedPrompt = `${prompt}\n\n${files.length > 1 ? 'Des images de référence sont fournies.' : 'Une image de référence est fournie.'} Inspire-toi de leur style graphique, leur palette de couleurs et leur composition. Ne reproduis PAS leur contenu (logos, visages, textes). Applique ce style à l'affiche de match demandée.`;
 
+      stage = 'openai_image_edit';
       const response = await openai.images.edit({
         model: 'gpt-image-1',
         image: files,
@@ -163,6 +225,7 @@ export async function POST(req: NextRequest) {
 
       imageB64 = response.data?.[0]?.b64_json ?? '';
     } else {
+      stage = 'openai_image_generate';
       const response = await openai.images.generate({
         model: 'gpt-image-1',
         prompt,
@@ -188,6 +251,7 @@ export async function POST(req: NextRequest) {
       ? `tifo-${homeTeam}-vs-${awayTeam}-${Date.now()}.png`
       : `tifo-${homeTeam}-${Date.now()}.png`;
     
+    stage = 'blob_upload';
     const blob = await put(filename, buffer, {
       access: 'public',
       contentType: 'image/png',
@@ -196,6 +260,7 @@ export async function POST(req: NextRequest) {
     const imageUrl = blob.url;
 
     // Décrémenter le quota et sauvegarder l'historique avec l'URL
+    stage = 'persist_history_and_quota';
     await Promise.all([
       decrementQuota(session.user.id),
       savePosterHistory(session.user.id, prompt, imageUrl, settings),
@@ -215,12 +280,24 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, image: imageUrl });
   } catch (err) {
+    const classification = classifyGenerationError(err, stage);
+
     captureServerEvent({
-      distinctId: 'anonymous',
+      distinctId: distinctIdForError,
       event: 'poster_generation_failed',
-      properties: { reason: 'server_error' },
+      properties: {
+        reason: classification.reason,
+        stage,
+        error_message: toErrorMessage(err).slice(0, 200),
+      },
     });
-    console.error('[generate-poster]', err);
-    return NextResponse.json({ error: 'Erreur lors de la génération. Réessayez.' }, { status: 500 });
+
+    console.error('[generate-poster]', {
+      stage,
+      reason: classification.reason,
+      message: toErrorMessage(err),
+    });
+
+    return NextResponse.json({ error: classification.userMessage }, { status: classification.status });
   }
 }
