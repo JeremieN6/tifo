@@ -35,6 +35,14 @@ function classifyGenerationError(err: unknown, stage: string) {
     };
   }
 
+  if (message.includes('cannot use public access on a private store')) {
+    return {
+      status: 500,
+      reason: 'blob_private_store_mismatch',
+      userMessage: 'Stockage mal configure (store Blob prive). Contactez le support.',
+    };
+  }
+
   if (message.includes('rate limit') || message.includes('quota') || message.includes('insufficient_quota')) {
     return {
       status: 429,
@@ -230,7 +238,6 @@ export async function POST(req: NextRequest) {
         model: 'gpt-image-1',
         prompt,
         size: '1024x1536',
-        response_format: 'b64_json',
       });
 
       imageB64 = response.data?.[0]?.b64_json ?? '';
@@ -250,14 +257,26 @@ export async function POST(req: NextRequest) {
     const filename = awayTeam
       ? `tifo-${homeTeam}-vs-${awayTeam}-${Date.now()}.png`
       : `tifo-${homeTeam}-${Date.now()}.png`;
-    
-    stage = 'blob_upload';
-    const blob = await put(filename, buffer, {
-      access: 'public',
-      contentType: 'image/png',
-    });
 
-    const imageUrl = blob.url;
+    let imageUrl: string;
+    try {
+      stage = 'blob_upload';
+      const blob = await put(filename, buffer, {
+        access: 'public',
+        contentType: 'image/png',
+      });
+      imageUrl = blob.url;
+    } catch (uploadErr) {
+      const uploadMessage = toErrorMessage(uploadErr).toLowerCase();
+
+      // Compatibility fallback: some stores are private-only and reject public uploads.
+      if (uploadMessage.includes('cannot use public access on a private store')) {
+        stage = 'blob_upload_fallback_data_url';
+        imageUrl = `data:image/png;base64,${imageB64}`;
+      } else {
+        throw uploadErr;
+      }
+    }
 
     // Décrémenter le quota et sauvegarder l'historique avec l'URL
     stage = 'persist_history_and_quota';
