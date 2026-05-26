@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getAllUsers, getUserById, setUserAdmin, setUserPlan } from '@/lib/admin';
+import { getAllUsers, getUserById, logAdminAction, setUserAdmin, setUserPlan } from '@/lib/admin';
 import {
   buildSignupWelcomeEmail,
   buildTrialEndedEmail,
@@ -37,11 +37,23 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'Plan invalide.' }, { status: 400 });
   }
 
+  const beforeUser = await getUserById(String(userId));
+
   if (plan === 'club_trial_90') {
     await setUserPlan(String(userId), 'club', Number(process.env.TRIAL_DAYS ?? 90));
   } else {
     await setUserPlan(String(userId), plan, undefined);
   }
+
+  const afterUser = await getUserById(String(userId));
+  await logAdminAction({
+    actorUserId: String(session.user.id),
+    targetUserId: String(userId),
+    actionType: 'plan_changed',
+    beforeValue: beforeUser,
+    afterValue: afterUser,
+    metadata: { requestedPlan: plan },
+  });
 
   return NextResponse.json({ success: true });
 }
@@ -52,7 +64,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Accès refusé.' }, { status: 403 });
   }
 
-  const { userId, template } = await req.json();
+  const { userId, template, subject, message } = await req.json();
 
   if (!userId || !template) {
     return NextResponse.json({ error: 'Paramètres manquants.' }, { status: 400 });
@@ -74,6 +86,12 @@ export async function POST(req: Request) {
       html: buildSignupWelcomeEmail(displayName, appUrl),
       text: 'Bienvenue sur Tifo. Votre compte est créé et prêt à l\'emploi.',
     });
+    await logAdminAction({
+      actorUserId: String(session.user.id),
+      targetUserId: String(userId),
+      actionType: 'email_sent',
+      metadata: { template },
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -87,6 +105,12 @@ export async function POST(req: Request) {
       subject: 'Bienvenue sur Tifo - Votre plan Club offert est actif',
       html: buildTrialWelcomeEmail(displayName, trialEndsAt, appUrl),
       text: `Votre essai Club est actif jusqu'au ${trialEndsAt.toLocaleDateString('fr-FR')}.`,
+    });
+    await logAdminAction({
+      actorUserId: String(session.user.id),
+      targetUserId: String(userId),
+      actionType: 'email_sent',
+      metadata: { template },
     });
     return NextResponse.json({ success: true });
   }
@@ -102,6 +126,12 @@ export async function POST(req: Request) {
       html: buildTrialReminderEmail(displayName, trialEndsAt, 7, appUrl),
       text: `Votre essai Club se termine le ${trialEndsAt.toLocaleDateString('fr-FR')}.`,
     });
+    await logAdminAction({
+      actorUserId: String(session.user.id),
+      targetUserId: String(userId),
+      actionType: 'email_sent',
+      metadata: { template },
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -111,6 +141,38 @@ export async function POST(req: Request) {
       subject: 'Tifo - Votre essai Club est terminé',
       html: buildTrialEndedEmail(displayName, appUrl),
       text: 'Votre essai Club est terminé et votre compte est repassé sur Starter.',
+    });
+    await logAdminAction({
+      actorUserId: String(session.user.id),
+      targetUserId: String(userId),
+      actionType: 'email_sent',
+      metadata: { template },
+    });
+    return NextResponse.json({ success: true });
+  }
+
+  if (template === 'custom') {
+    if (!subject || !message) {
+      return NextResponse.json({ error: 'Sujet et message requis pour un email custom.' }, { status: 400 });
+    }
+
+    const html = `<div style="font-family:Arial,sans-serif;background:#020f07;color:#f8fafc;padding:24px;"><div style="max-width:640px;margin:0 auto;background:#052e16;border:1px solid #166534;padding:28px;"><h1 style="margin:0 0 16px;color:#ffffff;">Tifo</h1><div style="color:#d1d5db;line-height:1.6;white-space:pre-wrap;">${String(message)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br />')}</div></div></div>`;
+
+    await sendEmail({
+      to: user.email,
+      subject: String(subject),
+      html,
+      text: String(message),
+    });
+    await logAdminAction({
+      actorUserId: String(session.user.id),
+      targetUserId: String(userId),
+      actionType: 'email_sent',
+      metadata: { template, subject },
     });
     return NextResponse.json({ success: true });
   }
@@ -133,6 +195,15 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'Vous ne pouvez pas retirer votre propre rôle admin.' }, { status: 400 });
   }
 
+  const beforeUser = await getUserById(String(userId));
   await setUserAdmin(String(userId), isAdmin);
+  await logAdminAction({
+    actorUserId: String(session.user.id),
+    targetUserId: String(userId),
+    actionType: 'admin_toggled',
+    beforeValue: beforeUser,
+    afterValue: { ...beforeUser, is_admin: isAdmin },
+    metadata: { isAdmin },
+  });
   return NextResponse.json({ success: true });
 }

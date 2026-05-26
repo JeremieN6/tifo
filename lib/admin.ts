@@ -1,5 +1,14 @@
 import pool from './db';
 
+interface AdminActionLogOptions {
+  actorUserId: string;
+  targetUserId: string;
+  actionType: string;
+  beforeValue?: unknown;
+  afterValue?: unknown;
+  metadata?: unknown;
+}
+
 export async function isAdminEmail(email: string): Promise<boolean> {
   const adminEmails = (process.env.TIFO_ADMIN_EMAILS ?? '')
     .split(',')
@@ -114,4 +123,48 @@ export async function setUserPlan(
      WHERE user_id = $1`,
     [userId]
   );
+}
+
+export async function logAdminAction({
+  actorUserId,
+  targetUserId,
+  actionType,
+  beforeValue,
+  afterValue,
+  metadata,
+}: AdminActionLogOptions): Promise<void> {
+  await pool.query(
+    `INSERT INTO admin_action_logs (actor_user_id, target_user_id, action_type, before_value, after_value, metadata)
+     VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb)`,
+    [
+      actorUserId,
+      targetUserId,
+      actionType,
+      beforeValue ? JSON.stringify(beforeValue) : null,
+      afterValue ? JSON.stringify(afterValue) : null,
+      metadata ? JSON.stringify(metadata) : null,
+    ]
+  );
+}
+
+export async function getAdminActionLogs(limit = 50) {
+  const result = await pool.query(
+    `SELECT
+      l.id,
+      l.action_type,
+      l.before_value,
+      l.after_value,
+      l.metadata,
+      l.created_at,
+      actor.email AS actor_email,
+      target.email AS target_email
+     FROM admin_action_logs l
+     LEFT JOIN users actor ON actor.id = l.actor_user_id
+     LEFT JOIN users target ON target.id = l.target_user_id
+     ORDER BY l.created_at DESC
+     LIMIT $1`,
+    [limit]
+  );
+
+  return result.rows;
 }

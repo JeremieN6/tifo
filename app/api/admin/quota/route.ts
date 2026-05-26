@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { setUserQuota } from '@/lib/admin';
+import { getUserById, logAdminAction, setUserQuota } from '@/lib/admin';
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -14,6 +14,16 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Paramètres manquants.' }, { status: 400 });
   }
 
+  const beforeUser = await getUserById(String(userId));
   await setUserQuota(String(userId), Number(quotaRemaining));
+  const afterUser = await getUserById(String(userId));
+  await logAdminAction({
+    actorUserId: String(session.user.id),
+    targetUserId: String(userId),
+    actionType: 'quota_updated',
+    beforeValue: beforeUser,
+    afterValue: afterUser,
+    metadata: { quotaRemaining: Number(quotaRemaining) },
+  });
   return NextResponse.json({ success: true });
 }

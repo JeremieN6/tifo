@@ -9,3 +9,14 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TABLE IF NOT EXISTS admin_action_logs (
+  id SERIAL PRIMARY KEY,
+  actor_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  target_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  action_type VARCHAR(100) NOT NULL,
+  before_value JSONB,
+  after_value JSONB,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);

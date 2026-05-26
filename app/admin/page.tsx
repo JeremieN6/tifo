@@ -16,6 +16,15 @@ interface User {
   trial_ends_at: string | null;
 }
 
+interface AdminHistoryItem {
+  id: number;
+  action_type: string;
+  actor_email: string | null;
+  target_email: string | null;
+  metadata: { template?: string; requestedPlan?: string; subject?: string; quotaRemaining?: number; isAdmin?: boolean } | null;
+  created_at: string;
+}
+
 interface Stats {
   totalUsers: number;
   totalRevenueCents: number;
@@ -29,6 +38,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [history, setHistory] = useState<AdminHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editQuota, setEditQuota] = useState('');
@@ -37,7 +47,11 @@ export default function AdminPage() {
   const [adminLoadingUserId, setAdminLoadingUserId] = useState<number | null>(null);
   const [selectedPlanByUser, setSelectedPlanByUser] = useState<Record<number, string>>({});
   const [selectedTemplateByUser, setSelectedTemplateByUser] = useState<Record<number, string>>({});
+  const [customSubjectByUser, setCustomSubjectByUser] = useState<Record<number, string>>({});
+  const [customMessageByUser, setCustomMessageByUser] = useState<Record<number, string>>({});
   const [feedback, setFeedback] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const [loadError, setLoadError] = useState<string>('');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -46,16 +60,28 @@ export default function AdminPage() {
       return;
     }
     async function load() {
-      const [uRes, sRes] = await Promise.all([
+      const [uRes, sRes, hRes] = await Promise.all([
         fetch('/api/admin/users'),
         fetch('/api/admin/stats'),
+        fetch('/api/admin/history'),
       ]);
-      if (uRes.ok) setUsers(await uRes.json());
+      if (uRes.ok) {
+        setUsers(await uRes.json());
+      } else {
+        const data = await uRes.json().catch(() => ({ error: 'Erreur de chargement utilisateurs.' }));
+        setLoadError(data.error ?? 'Erreur de chargement utilisateurs.');
+      }
       if (sRes.ok) setStats(await sRes.json());
+      if (hRes.ok) setHistory(await hRes.json());
       setLoading(false);
     }
     load();
   }, [session, status, router]);
+
+  const filteredUsers = users.filter((user) => {
+    const haystack = `${user.email} ${user.name ?? ''}`.toLowerCase();
+    return haystack.includes(search.toLowerCase());
+  });
 
   async function saveQuota(userId: number) {
     await fetch('/api/admin/quota', {
@@ -71,6 +97,16 @@ export default function AdminPage() {
 
   async function updatePlan(userId: number) {
     const selectedPlan = selectedPlanByUser[userId] ?? 'starter';
+    const currentUser = users.find((user) => user.id === userId);
+
+    const isSensitiveDowngrade = currentUser
+      && currentUser.plan !== 'starter'
+      && selectedPlan === 'starter';
+
+    if (isSensitiveDowngrade && !window.confirm('Confirmer le passage de cet utilisateur vers Starter ?')) {
+      return;
+    }
+
     setPlanLoadingUserId(userId);
     setFeedback('');
 
@@ -92,18 +128,35 @@ export default function AdminPage() {
     if (updatedUsers.ok) {
       setUsers(await updatedUsers.json());
     }
+    const updatedHistory = await fetch('/api/admin/history');
+    if (updatedHistory.ok) {
+      setHistory(await updatedHistory.json());
+    }
     setFeedback('Plan mis à jour.');
   }
 
   async function sendTemplate(userId: number) {
     const template = selectedTemplateByUser[userId] ?? 'welcome';
+
+    if (template === 'trial_ended' && !window.confirm('Confirmer l\'envoi du mail de fin d\'essai ?')) {
+      return;
+    }
+
+    const subject = customSubjectByUser[userId] ?? '';
+    const message = customMessageByUser[userId] ?? '';
+
+    if (template === 'custom' && (!subject.trim() || !message.trim())) {
+      setFeedback('Sujet et message sont requis pour un email custom.');
+      return;
+    }
+
     setEmailLoadingUserId(userId);
     setFeedback('');
 
     const res = await fetch('/api/admin/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, template }),
+      body: JSON.stringify({ userId, template, subject, message }),
     });
 
     setEmailLoadingUserId(null);
@@ -115,9 +168,18 @@ export default function AdminPage() {
     }
 
     setFeedback('Email envoyé.');
+
+    const updatedHistory = await fetch('/api/admin/history');
+    if (updatedHistory.ok) {
+      setHistory(await updatedHistory.json());
+    }
   }
 
   async function toggleAdmin(userId: number, nextValue: boolean) {
+    if (!nextValue && !window.confirm('Confirmer le retrait du rôle admin pour cet utilisateur ?')) {
+      return;
+    }
+
     setAdminLoadingUserId(userId);
     setFeedback('');
 
@@ -136,6 +198,10 @@ export default function AdminPage() {
     }
 
     setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_admin: nextValue } : u)));
+    const updatedHistory = await fetch('/api/admin/history');
+    if (updatedHistory.ok) {
+      setHistory(await updatedHistory.json());
+    }
     setFeedback(nextValue ? 'Utilisateur promu admin.' : 'Utilisateur retiré des admins.');
   }
 
@@ -153,6 +219,11 @@ export default function AdminPage() {
         {feedback && (
           <p className="mb-4 rounded border border-green-900/40 bg-green-950/20 px-4 py-2 text-sm text-green-300">
             {feedback}
+          </p>
+        )}
+        {loadError && (
+          <p className="mb-4 rounded border border-red-900/40 bg-red-950/20 px-4 py-2 text-sm text-red-300">
+            {loadError}
           </p>
         )}
 
@@ -188,6 +259,16 @@ export default function AdminPage() {
           </div>
         )}
 
+        <div className="mb-6">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher un utilisateur par email"
+            className="w-full rounded-xl border border-green-900/30 bg-green-950/10 px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none"
+          />
+        </div>
+
         {/* Users table */}
         <div className="rounded-xl border border-green-900/30 overflow-hidden">
           <table className="w-full text-sm">
@@ -203,7 +284,7 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-green-900/20">
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-green-950/10">
                   <td className="px-4 py-3 text-white">
                     <div>{user.email}</div>
@@ -285,7 +366,25 @@ export default function AdminPage() {
                         <option value="trial_welcome">trial_welcome</option>
                         <option value="trial_reminder_7">trial_reminder_7</option>
                         <option value="trial_ended">trial_ended</option>
+                        <option value="custom">custom</option>
                       </select>
+                      {selectedTemplateByUser[user.id] === 'custom' && (
+                        <>
+                          <input
+                            type="text"
+                            value={customSubjectByUser[user.id] ?? ''}
+                            onChange={(e) => setCustomSubjectByUser((prev) => ({ ...prev, [user.id]: e.target.value }))}
+                            placeholder="Sujet"
+                            className="rounded border border-green-900/40 bg-[#020f07] px-2 py-1 text-xs text-white placeholder:text-gray-500"
+                          />
+                          <textarea
+                            value={customMessageByUser[user.id] ?? ''}
+                            onChange={(e) => setCustomMessageByUser((prev) => ({ ...prev, [user.id]: e.target.value }))}
+                            placeholder="Message"
+                            className="min-h-20 rounded border border-green-900/40 bg-[#020f07] px-2 py-1 text-xs text-white placeholder:text-gray-500"
+                          />
+                        </>
+                      )}
                       <button
                         onClick={() => sendTemplate(user.id)}
                         disabled={emailLoadingUserId === user.id}
@@ -310,8 +409,38 @@ export default function AdminPage() {
                   </td>
                 </tr>
               ))}
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
+                    Aucun utilisateur trouvé ou chargement impossible.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-10 rounded-xl border border-green-900/30 bg-green-950/10 p-6">
+          <h2 className="mb-4 font-semibold text-white">Historique admin</h2>
+          <div className="space-y-3">
+            {history.map((item) => (
+              <div key={item.id} className="rounded border border-green-900/20 bg-black/10 px-4 py-3 text-sm text-gray-300">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium text-white">{item.action_type}</p>
+                  <p className="text-xs text-gray-500">{new Date(item.created_at).toLocaleString('fr-FR')}</p>
+                </div>
+                <p className="mt-1 text-xs text-gray-400">
+                  {item.actor_email ?? 'Système'} → {item.target_email ?? 'Utilisateur supprimé'}
+                </p>
+                {item.metadata && (
+                  <p className="mt-1 text-xs text-gray-500">{JSON.stringify(item.metadata)}</p>
+                )}
+              </div>
+            ))}
+            {history.length === 0 && (
+              <p className="text-sm text-gray-500">Aucune action admin enregistrée pour le moment.</p>
+            )}
+          </div>
         </div>
       </main>
     </div>
