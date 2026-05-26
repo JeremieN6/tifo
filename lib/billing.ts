@@ -177,7 +177,7 @@ export async function getTrialUsersForReminder(daysBeforeEnd: number): Promise<T
      WHERE
        ua.plan = 'club'
        AND ua.trial_ends_at IS NOT NULL
-       AND DATE(ua.trial_ends_at) = CURRENT_DATE + $1
+       AND DATE(ua.trial_ends_at) = CURRENT_DATE + $1::integer
        AND (
          ua.trial_last_reminder_days IS DISTINCT FROM $1
          OR ua.trial_last_reminder_sent_at IS NULL
