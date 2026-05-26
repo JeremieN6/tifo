@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthShell from '@/components/auth/AuthShell';
+import { captureClientEvent } from '@/lib/analytics-client';
 
 function SuccessContent() {
   const router = useRouter();
@@ -12,6 +13,8 @@ function SuccessContent() {
   const plan = searchParams.get('plan') ?? 'pro';
 
   useEffect(() => {
+    captureClientEvent('checkout_success_page_viewed', { plan });
+
     const timer = setTimeout(() => {
       router.replace('/dashboard');
     }, 3000);

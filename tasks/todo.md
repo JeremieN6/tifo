@@ -5,6 +5,11 @@
 ---
 
 ## En cours
+- [ ] [Session] Finaliser `posthog wizard doctor/audit` sur poste non restreint (blocage unzip/proxy sur poste actuel)
+- [x] [Session] Créer le blueprint dashboards PostHog (acquisition/activation/revenue)
+- [x] [Session] Ajouter PostHog client global (provider + pageviews + identify)
+- [x] [Session] Instrumenter les événements clés (signup/login/create/checkout/webhook)
+- [x] [Session] Documenter les variables d'environnement PostHog + valider TypeScript
 - [x] [Session] Stripe checkout : redirection post-paiement vers l'app
 - [x] [Session] Account : bouton "Télécharger ma facture"
 - [x] [Session] Account : annulation via Stripe Customer Portal

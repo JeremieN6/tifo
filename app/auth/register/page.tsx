@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { captureClientEvent } from '@/lib/analytics-client';
 
 const leftCards = [
   { title: 'Compte Tifo', sub: 'Démarrage\nrapide' },
@@ -32,6 +33,9 @@ export default function RegisterPage() {
     const data = await res.json();
 
     if (!res.ok) {
+      captureClientEvent('signup_failed', {
+        reason: data.error ?? 'api_error',
+      });
       setError(data.error ?? 'Erreur lors de l\'inscription.');
       setLoading(false);
       return;
@@ -39,9 +43,13 @@ export default function RegisterPage() {
 
     const result = await signIn('credentials', { email, password, redirect: false });
     if (result?.error) {
+      captureClientEvent('login_failed_after_signup', {
+        reason: result.error,
+      });
       setError('Compte créé, mais erreur lors de la connexion. Connecte-toi manuellement.');
       setLoading(false);
     } else {
+      captureClientEvent('signup_completed_and_logged_in');
       router.push('/dashboard');
     }
   }

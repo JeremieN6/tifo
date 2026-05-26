@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { captureClientEvent } from '@/lib/analytics-client';
 
 const leftCards = [
   { title: 'Votre espace', sub: 'Accès direct' },
@@ -23,9 +24,13 @@ export default function LoginPage() {
     setError('');
     const result = await signIn('credentials', { email, password, redirect: false });
     if (result?.error) {
+      captureClientEvent('login_failed', {
+        reason: result.error,
+      });
       setError('Email ou mot de passe incorrect.');
       setLoading(false);
     } else {
+      captureClientEvent('login_succeeded');
       router.push('/dashboard');
     }
   }

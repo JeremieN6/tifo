@@ -5,6 +5,7 @@ import { getUserAccess, decrementQuota } from '@/lib/billing';
 import { savePosterHistory } from '@/lib/poster-history';
 import { put } from '@vercel/blob';
 import OpenAI from 'openai';
+import { captureServerEvent } from '@/lib/posthog-server';
 
 const MAX_REFERENCE_IMAGES = 3;
 const MAX_REFERENCE_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -55,15 +56,30 @@ export async function POST(req: NextRequest) {
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
+      captureServerEvent({
+        distinctId: 'anonymous',
+        event: 'poster_generation_failed',
+        properties: { reason: 'unauthenticated' },
+      });
       return NextResponse.json({ error: 'Connexion requise.' }, { status: 401 });
     }
 
     const access = await getUserAccess(session.user.id);
     if (!access) {
+      captureServerEvent({
+        distinctId: session.user.id,
+        event: 'poster_generation_failed',
+        properties: { reason: 'access_not_found' },
+      });
       return NextResponse.json({ error: 'Accès introuvable.' }, { status: 403 });
     }
 
     if (access.quota_remaining <= 0) {
+      captureServerEvent({
+        distinctId: session.user.id,
+        event: 'poster_generation_failed',
+        properties: { reason: 'quota_exhausted', plan: access.plan },
+      });
       return NextResponse.json({ error: 'Quota épuisé. Passez au plan Pro pour continuer.' }, { status: 429 });
     }
 
@@ -91,9 +107,19 @@ export async function POST(req: NextRequest) {
     const isTransferEvent = isAnnouncement && (eventType === 'recrutement' || eventType === 'transfert');
 
     if (!homeTeam) {
+      captureServerEvent({
+        distinctId: session.user.id,
+        event: 'poster_generation_failed',
+        properties: { reason: 'missing_home_team' },
+      });
       return NextResponse.json({ error: 'Le premier club/équipe est requis.' }, { status: 400 });
     }
     if ((!isAnnouncement && !awayTeam) || (isTransferEvent && !awayTeam)) {
+      captureServerEvent({
+        distinctId: session.user.id,
+        event: 'poster_generation_failed',
+        properties: { reason: 'missing_away_team', poster_type: posterType, event_type: eventType },
+      });
       return NextResponse.json({ error: 'Le second club/équipe est requis pour ce type d\'affiche.' }, { status: 400 });
     }
 
@@ -148,6 +174,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (!imageB64) {
+      captureServerEvent({
+        distinctId: session.user.id,
+        event: 'poster_generation_failed',
+        properties: { reason: 'empty_image_payload' },
+      });
       return NextResponse.json({ error: 'Aucune image générée.' }, { status: 500 });
     }
 
@@ -170,8 +201,25 @@ export async function POST(req: NextRequest) {
       savePosterHistory(session.user.id, prompt, imageUrl, settings),
     ]);
 
+    captureServerEvent({
+      distinctId: session.user.id,
+      event: 'poster_generation_succeeded',
+      properties: {
+        plan: access.plan,
+        poster_type: posterType,
+        event_type: eventType || 'match',
+        has_away_team: Boolean(awayTeam),
+        reference_images_count: referenceFiles.length,
+      },
+    });
+
     return NextResponse.json({ success: true, image: imageUrl });
   } catch (err) {
+    captureServerEvent({
+      distinctId: 'anonymous',
+      event: 'poster_generation_failed',
+      properties: { reason: 'server_error' },
+    });
     console.error('[generate-poster]', err);
     return NextResponse.json({ error: 'Erreur lors de la génération. Réessayez.' }, { status: 500 });
   }

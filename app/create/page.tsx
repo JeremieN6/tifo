@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
+import { captureClientEvent } from '@/lib/analytics-client';
 
 // Types
 interface MatchData {
@@ -490,6 +491,15 @@ export default function CreatePage() {
     setGenerating(true);
     setGenError('');
 
+    captureClientEvent('poster_generation_requested', {
+      poster_type: posterType || 'unknown',
+      event_type: posterType === 'annonce' ? data.eventType : 'match',
+      output_format: selectedFormat,
+      has_away_team: Boolean(data.awayTeam),
+      reference_images_count: data.referenceImages.length,
+      plan: quota?.plan ?? 'starter',
+    });
+
     const formData = new FormData();
     formData.append('homeTeam', data.homeTeam);
     formData.append('awayTeam', data.awayTeam);
@@ -522,12 +532,28 @@ export default function CreatePage() {
       });
       const json = await res.json();
       if (!res.ok) {
+        captureClientEvent('poster_generation_failed', {
+          reason: json.error ?? 'api_error',
+          poster_type: posterType || 'unknown',
+          event_type: posterType === 'annonce' ? data.eventType : 'match',
+        });
         setGenError(json.error ?? 'Erreur lors de la génération.');
       } else {
+        captureClientEvent('poster_generation_succeeded', {
+          poster_type: posterType || 'unknown',
+          event_type: posterType === 'annonce' ? data.eventType : 'match',
+          output_format: selectedFormat,
+          reference_images_count: data.referenceImages.length,
+          plan: quota?.plan ?? 'starter',
+        });
         setGeneratedImage(json.image);
         setStep(5);
       }
     } catch {
+      captureClientEvent('poster_generation_failed', {
+        reason: 'network_error',
+        poster_type: posterType || 'unknown',
+      });
       setGenError('Erreur réseau. Réessayez.');
     } finally {
       setGenerating(false);
@@ -535,6 +561,11 @@ export default function CreatePage() {
   }
 
   function downloadImage() {
+    captureClientEvent('poster_downloaded', {
+      poster_type: posterType || 'unknown',
+      output_format: selectedFormat,
+    });
+
     const a = document.createElement('a');
     a.href = generatedImage;
     a.download = `tifo-${data.homeTeam}-vs-${data.awayTeam}-${data.date}.png`;

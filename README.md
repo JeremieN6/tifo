@@ -49,6 +49,28 @@ npm run lint       # lint
 
 Conserver les secrets hors du dépôt. Voir `.env.example` pour la liste minimale attendue.
 
+### Analytics PostHog
+
+Le projet inclut un tracking PostHog côté client et côté serveur.
+
+Variables à renseigner :
+
+- `NEXT_PUBLIC_POSTHOG_KEY`
+- `NEXT_PUBLIC_POSTHOG_HOST` (ex: `https://eu.i.posthog.com`)
+- `POSTHOG_API_KEY` (optionnel, fallback sur `NEXT_PUBLIC_POSTHOG_KEY`)
+- `POSTHOG_HOST` (optionnel, fallback sur `NEXT_PUBLIC_POSTHOG_HOST`)
+
+Événements principaux déjà instrumentés :
+
+- `signup_succeeded`, `signup_failed`
+- `login_succeeded`, `login_failed`
+- `poster_generation_requested`, `poster_generation_succeeded`, `poster_generation_failed`, `poster_downloaded`
+- `checkout_started`, `checkout_failed`, `checkout_success_page_viewed`, `subscription_activated`
+
+Blueprint dashboards/KPIs prêt à configurer dans PostHog :
+
+- `tasks/posthog-dashboard-setup.md`
+
 ## Déploiement
 
 Build puis déployer (ex: Vercel, VPS). Exemple minimal :

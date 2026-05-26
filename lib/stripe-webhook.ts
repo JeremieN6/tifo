@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { setStripeCustomerId, upgradePlan } from '@/lib/billing';
+import { captureServerEvent } from '@/lib/posthog-server';
 
 export async function handleStripeWebhook(req: NextRequest) {
   try {
@@ -57,6 +58,15 @@ export async function handleStripeWebhook(req: NextRequest) {
     }
 
     await upgradePlan(userEmail, plan, event.id, amount);
+
+    captureServerEvent({
+      distinctId: userEmail,
+      event: 'subscription_activated',
+      properties: {
+        plan,
+        amount,
+      },
+    });
 
     return NextResponse.json({ received: true });
   } catch (err) {
