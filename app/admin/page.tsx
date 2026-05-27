@@ -33,6 +33,14 @@ interface Stats {
   planBreakdown: { plan: string; count: number }[];
 }
 
+type ToastKind = 'success' | 'error' | 'warning' | 'info';
+
+interface ToastItem {
+  id: number;
+  message: string;
+  kind: ToastKind;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -49,9 +57,16 @@ export default function AdminPage() {
   const [selectedTemplateByUser, setSelectedTemplateByUser] = useState<Record<number, string>>({});
   const [customSubjectByUser, setCustomSubjectByUser] = useState<Record<number, string>>({});
   const [customMessageByUser, setCustomMessageByUser] = useState<Record<number, string>>({});
-  const [feedback, setFeedback] = useState<string>('');
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [search, setSearch] = useState('');
-  const [loadError, setLoadError] = useState<string>('');
+
+  function pushToast(message: string, kind: ToastKind = 'info') {
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    setToasts((prev) => [...prev, { id, message, kind }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 4500);
+  }
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -69,7 +84,7 @@ export default function AdminPage() {
         setUsers(await uRes.json());
       } else {
         const data = await uRes.json().catch(() => ({ error: 'Erreur de chargement utilisateurs.' }));
-        setLoadError(data.error ?? 'Erreur de chargement utilisateurs.');
+        pushToast(data.error ?? 'Erreur de chargement utilisateurs.', 'error');
       }
       if (sRes.ok) setStats(await sRes.json());
       if (hRes.ok) setHistory(await hRes.json());
@@ -108,7 +123,6 @@ export default function AdminPage() {
     }
 
     setPlanLoadingUserId(userId);
-    setFeedback('');
 
     const res = await fetch('/api/admin/users', {
       method: 'PUT',
@@ -120,7 +134,7 @@ export default function AdminPage() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({ error: 'Erreur inconnue.' }));
-      setFeedback(data.error ?? 'Impossible de mettre à jour le plan.');
+      pushToast(data.error ?? 'Impossible de mettre à jour le plan.', 'error');
       return;
     }
 
@@ -132,26 +146,25 @@ export default function AdminPage() {
     if (updatedHistory.ok) {
       setHistory(await updatedHistory.json());
     }
-    setFeedback('Plan mis à jour.');
+    pushToast('Plan mis à jour.', 'success');
   }
 
   async function sendTemplate(userId: number) {
     const template = selectedTemplateByUser[userId] ?? 'welcome';
 
-    if (template === 'trial_ended' && !window.confirm('Confirmer l\'envoi du mail de fin d\'essai ?')) {
-      return;
+    if (template === 'trial_ended') {
+      pushToast('Envoi du template trial_ended en cours.', 'warning');
     }
 
     const subject = customSubjectByUser[userId] ?? '';
     const message = customMessageByUser[userId] ?? '';
 
     if (template === 'custom' && (!subject.trim() || !message.trim())) {
-      setFeedback('Sujet et message sont requis pour un email custom.');
+      pushToast('Sujet et message sont requis pour un email custom.', 'error');
       return;
     }
 
     setEmailLoadingUserId(userId);
-    setFeedback('');
 
     const res = await fetch('/api/admin/users', {
       method: 'POST',
@@ -161,13 +174,17 @@ export default function AdminPage() {
 
     setEmailLoadingUserId(null);
 
+    const data = await res.json().catch(() => ({} as { error?: string; warning?: string }));
+
     if (!res.ok) {
-      const data = await res.json().catch(() => ({ error: 'Erreur inconnue.' }));
-      setFeedback(data.error ?? 'Impossible d\'envoyer l\'email.');
+      pushToast(data.error ?? 'Impossible d\'envoyer l\'email.', 'error');
       return;
     }
 
-    setFeedback('Email envoyé.');
+    if (data.warning) {
+      pushToast(data.warning, 'warning');
+    }
+    pushToast('Email envoyé.', 'success');
 
     const updatedHistory = await fetch('/api/admin/history');
     if (updatedHistory.ok) {
@@ -181,7 +198,6 @@ export default function AdminPage() {
     }
 
     setAdminLoadingUserId(userId);
-    setFeedback('');
 
     const res = await fetch('/api/admin/users', {
       method: 'PATCH',
@@ -193,7 +209,7 @@ export default function AdminPage() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({ error: 'Erreur inconnue.' }));
-      setFeedback(data.error ?? 'Impossible de mettre à jour le rôle admin.');
+      pushToast(data.error ?? 'Impossible de mettre à jour le rôle admin.', 'error');
       return;
     }
 
@@ -202,7 +218,7 @@ export default function AdminPage() {
     if (updatedHistory.ok) {
       setHistory(await updatedHistory.json());
     }
-    setFeedback(nextValue ? 'Utilisateur promu admin.' : 'Utilisateur retiré des admins.');
+    pushToast(nextValue ? 'Utilisateur promu admin.' : 'Utilisateur retiré des admins.', 'success');
   }
 
   if (status === 'loading' || loading) {
@@ -216,17 +232,6 @@ export default function AdminPage() {
       <Navbar />
       <main className="mx-auto max-w-7xl px-6 pb-16 pt-28 md:px-12">
         <h1 className="font-display text-4xl uppercase text-white mb-8">Administration</h1>
-        {feedback && (
-          <p className="mb-4 rounded border border-green-900/40 bg-green-950/20 px-4 py-2 text-sm text-green-300">
-            {feedback}
-          </p>
-        )}
-        {loadError && (
-          <p className="mb-4 rounded border border-red-900/40 bg-red-950/20 px-4 py-2 text-sm text-red-300">
-            {loadError}
-          </p>
-        )}
-
         {/* Stats */}
         {stats && (
           <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -443,6 +448,25 @@ export default function AdminPage() {
           </div>
         </div>
       </main>
+
+      <div className="pointer-events-none fixed right-4 top-4 z-50 flex w-full max-w-sm flex-col gap-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`pointer-events-auto rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur transition-all ${
+              toast.kind === 'success'
+                ? 'border-emerald-500/40 bg-emerald-950/70 text-emerald-200'
+                : toast.kind === 'error'
+                  ? 'border-red-500/40 bg-red-950/70 text-red-200'
+                  : toast.kind === 'warning'
+                    ? 'border-amber-500/40 bg-amber-950/70 text-amber-200'
+                    : 'border-cyan-500/40 bg-cyan-950/70 text-cyan-200'
+            }`}
+          >
+            {toast.message}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

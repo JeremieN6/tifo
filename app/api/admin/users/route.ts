@@ -77,7 +77,14 @@ export async function POST(req: Request) {
 
   const appUrl = process.env.APP_URL ?? process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
   const displayName = user.name ?? user.email;
-  const trialEndsAt = user.trial_ends_at ? new Date(user.trial_ends_at) : null;
+
+  const parseTrialEndsAt = (value: unknown): Date | null => {
+    if (!value) return null;
+    const parsed = value instanceof Date ? value : new Date(String(value));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const trialEndsAt = parseTrialEndsAt(user.trial_ends_at);
 
   if (template === 'welcome') {
     await sendEmail({
@@ -97,7 +104,10 @@ export async function POST(req: Request) {
 
   if (template === 'trial_welcome') {
     if (!trialEndsAt) {
-      return NextResponse.json({ error: 'Cet utilisateur n\'a pas de date de fin d\'essai.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Cet utilisateur n\'a pas de date de fin d\'essai.' },
+        { status: 400 }
+      );
     }
 
     await sendEmail({
@@ -117,7 +127,10 @@ export async function POST(req: Request) {
 
   if (template === 'trial_reminder_7') {
     if (!trialEndsAt) {
-      return NextResponse.json({ error: 'Cet utilisateur n\'a pas de date de fin d\'essai.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Cet utilisateur n\'a pas de date de fin d\'essai.' },
+        { status: 400 }
+      );
     }
 
     await sendEmail({
