@@ -20,7 +20,7 @@ function SuccessContent() {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, plan]);
 
   const messages: Record<string, { title: string; text: string }> = {
     pro: {
@@ -41,7 +41,7 @@ function SuccessContent() {
         <div className="text-5xl">🏆</div>
         <p className="text-gray-300">{msg.text}</p>
         <p className="text-sm text-gray-500">
-          Si ton quota n'est pas encore mis à jour, patiente quelques instants et recharge la page.
+          Si ton quota n&apos;est pas encore mis à jour, patiente quelques instants et recharge la page.
         </p>
         <p className="text-xs text-gray-500">Redirection automatique vers ton dashboard…</p>
         <Link

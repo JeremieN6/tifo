@@ -63,13 +63,13 @@ const plans = [
     annualHref: proPaymentLinkAnnual,
     highlighted: true,
   },
-  {
-    name: 'Club',
-    price: '29€',
-    label: 'Prix de lancement — 50 premiers clubs',
-    description: 'Pour les clubs, médias régionaux et agences avec plusieurs équipes.',
-    features: [
-      { text: 'Tout ce qu\'il y a dans Pro', included: true },
+      {
+        name: 'Club',
+        price: '29€',
+        label: 'Prix de lancement — 50 premiers clubs',
+        description: 'Pour les clubs, médias régionaux et agences avec plusieurs équipes.',
+        features: [
+          { text: 'Tout ce qu’il y a dans Pro', included: true },
       { text: 'Multi-équipes / Multi-compétitions', included: true },
       { text: 'Palette couleur personnalisée', included: true },
       { text: 'Export formats custom', included: true },
@@ -234,7 +234,7 @@ export default function PricingSection() {
         </div>
 
         <p className="mt-6 text-center font-body text-xs uppercase tracking-[0.18em] text-slate-500">
-          L'offres PRO contient les fonctionnalités du plan STARTER, et l'offre CLUB contient celles de PRO. <br /> Pas de surprise, juste plus de possibilités à mesure que vous montez en gamme.
+          L&apos;offre PRO contient les fonctionnalités du plan STARTER, et l&apos;offre CLUB contient celles de PRO. <br /> Pas de surprise, juste plus de possibilités à mesure que vous montez en gamme.
         </p>
       </div>
       <div className="section-divider mt-24 md:mt-32" />
