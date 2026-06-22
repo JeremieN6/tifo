@@ -5,6 +5,8 @@
 ---
 
 ## En cours
+- [x] [Session] Renforcer la DA transfert/mercato (prompt premium + variations de lumière/composition/typo/texture)
+- [ ] [Session] Tester 10 générations transfert pour valider la non-répétition visuelle
 - [x] [Session] Finaliser `posthog wizard doctor/audit` sur poste non restreint (configuration validée; la dernière étape du wizard reste TTY interactif)
 - [x] [Session] Créer le blueprint dashboards PostHog (acquisition/activation/revenue)
 - [x] [Session] Ajouter PostHog client global (provider + pageviews + identify)

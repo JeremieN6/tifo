@@ -10,6 +10,75 @@ import { captureServerEvent } from '@/lib/posthog-server';
 const MAX_REFERENCE_IMAGES = 3;
 const MAX_REFERENCE_IMAGE_BYTES = 5 * 1024 * 1024;
 
+type VisualDirection = {
+  profile: string;
+  composition: string;
+  lighting: string;
+  typography: string;
+  texture: string;
+  cinematicDetail: string;
+  safetyRule: string;
+};
+
+const MERCATO_DIRECTIONS: readonly VisualDirection[] = [
+  {
+    profile: 'Mercato Elite Collage',
+    composition: 'double portrait hero (visage principal 65%, silhouette secondaire 30%) + joueur plein pied en bas centre, profondeur par plans',
+    lighting: 'contre-jour stadium + rim light doré/bleu sur contours, haut contraste cinématique',
+    typography: 'titre principal condensed uppercase + sous-titres fins espacés, hiérarchie nette (1 macro titre, 2 secondaires max)',
+    texture: 'fumée volumétrique subtile + grain film fin + particules lumineuses, sans surcharge',
+    cinematicDetail: 'intégrer blason géant en arrière-plan flou, architecture de stade et perspective urbaine premium',
+    safetyRule: 'interdire rendu “template générique”, interdire effet pinceau jaune dominant sur le titre',
+  },
+  {
+    profile: 'Mercato Editorial Mono Luxe',
+    composition: 'portrait central sculpté + personnage secondaire décadré à droite + bloc texte vertical éditorial',
+    lighting: 'lumière latérale douce + halo froid arrière, contraste local peau/tissu très maîtrisé',
+    typography: 'mix serif élégante pour nom + sans condensée pour infos transfert, pas de graisse uniforme partout',
+    texture: 'brume légère, micro-grain papier premium, dégradés propres sans bavure',
+    cinematicDetail: 'composer avec un monument de la ville et une géométrie de stade pour ancrer le club',
+    safetyRule: 'éviter look “affiche amateur IA”, éviter icônes ou stickers superflus',
+  },
+  {
+    profile: 'Mercato Neon Prestige',
+    composition: 'split diagonal entre ancien et nouveau club, sujet principal frontal, silhouettes de support en fond',
+    lighting: 'duo de lumières colorées complémentaires, rim néon subtil et reflets humides maîtrisés',
+    typography: 'headline monumental lisible + taglines minimalistes, kerning contrôlé',
+    texture: 'glow localisé, très léger halftone sur zones d’ombre, micro-contraste accentué',
+    cinematicDetail: 'ajouter un blason lumineux en contour et lignes d’énergie orientant le regard vers le nom',
+    safetyRule: 'pas d’excès de glow, pas de bouillie visuelle, pas de surcharge texte',
+  },
+];
+
+const GENERAL_DIRECTIONS: readonly VisualDirection[] = [
+  {
+    profile: 'Football Cinematic Impact',
+    composition: 'focus héro central + fond stade contextuel + éléments secondaires discrets',
+    lighting: 'éclairage dramatique directionnel, contraste fort mais lisible',
+    typography: 'headline nette avec 1 style principal, sous-infos secondaires plus fines',
+    texture: 'grain subtil et profondeur atmosphérique légère',
+    cinematicDetail: 'ajouter mouvement et énergie sans surcharger la scène',
+    safetyRule: 'éviter le rendu répétitif de template',
+  },
+  {
+    profile: 'Football Editorial Clean',
+    composition: 'mise en page éditoriale claire, espaces négatifs utiles, sujet bien détaché',
+    lighting: 'lumière propre avec modelé réaliste des volumes',
+    typography: 'combinaison de titres structurés et micro-texte élégant',
+    texture: 'trame très légère, rendu premium net',
+    cinematicDetail: 'inclure un rappel identitaire du club sans envahir la composition',
+    safetyRule: 'pas d’effets gratuits ni d’ornements incohérents',
+  },
+];
+
+function pickOne<T>(values: readonly T[]): T {
+  return values[Math.floor(Math.random() * values.length)];
+}
+
+function getVisualDirection(isTransferEvent: boolean): VisualDirection {
+  return pickOne(isTransferEvent ? MERCATO_DIRECTIONS : GENERAL_DIRECTIONS);
+}
+
 function toErrorMessage(value: unknown): string {
   if (value instanceof Error) return value.message;
   if (typeof value === 'string') return value;
@@ -86,12 +155,23 @@ function buildPrompt(data: {
   colors: string;
   description: string;
 }): string {
+  const isTransferEvent = data.posterType === 'annonce' && (data.eventType === 'recrutement' || data.eventType === 'transfert');
+  const visualDirection = getVisualDirection(isTransferEvent);
   const teamDescriptor = data.awayTeam
     ? `${data.homeTeam} vs ${data.awayTeam}`
     : data.homeTeam;
   const eventDescriptor = data.posterType === 'annonce'
     ? `Événement : ${data.eventType || 'annonce'}`
     : 'Événement : match';
+
+  const transferSpecificBlock = isTransferEvent
+    ? `Direction Mercato Premium (obligatoire) :
+- Ambition: rendu premium comparable à une campagne de reveal officielle top club européen.
+- Storytelling visuel: “nouveau chapitre”, montée en statut, impact émotionnel immédiat.
+- Signature visuelle: montage photo cinématique haut de gamme, profondeur multi-plans, branding club intégré avec élégance.
+- Variantes autorisées: changer intelligemment lumière, angle de portrait, structure des textes et textures pour éviter toute répétition.
+- Interdits: rendu générique type template IA, grosse typo uniforme partout, surlignage pinceau systématique.`
+    : '';
 
   return `Tu es un designer graphique expert en affiches de football. Crée une affiche de match professionnelle et visuellement impactante.
 
@@ -103,7 +183,17 @@ Style : ${data.style}
 Couleurs : ${data.colors}
 Description : ${data.description}
 
-L'affiche doit être au format portrait (2:3), avec une hiérarchie visuelle claire, la date et le lieu de l'événement. Si un seul club est fourni, mets-le au centre de la composition et évite d'inventer une seconde équipe. Style graphique : ${data.style}. Rendu professionnel, ambiance football passionate.`;
+Profil visuel sélectionné : ${visualDirection.profile}
+Composition : ${visualDirection.composition}
+Lumière : ${visualDirection.lighting}
+Typographie : ${visualDirection.typography}
+Texture : ${visualDirection.texture}
+Détail cinématique : ${visualDirection.cinematicDetail}
+Règle qualité : ${visualDirection.safetyRule}
+
+${transferSpecificBlock}
+
+L'affiche doit être au format portrait (2:3), avec une hiérarchie visuelle claire, la date et le lieu de l'événement. Si un seul club est fourni, mets-le au centre de la composition et évite d'inventer une seconde équipe. Style graphique : ${data.style}. Rendu professionnel, premium, différenciant et non répétitif.`;
 }
 
 export async function POST(req: NextRequest) {
