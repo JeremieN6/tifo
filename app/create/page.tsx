@@ -45,7 +45,7 @@ const AMBIANCES = [
 const COMPETITIONS = [
   'Ligue 1', 'Ligue 2', 'Champions League', 'Europa League', 'Conference League',
   'Coupe de France', 'Liga', 'Premier League', 'Serie A', 'Bundesliga',
-  'Eredivisie', 'Championnat National', 'Amical', 'Autre',
+  'Eredivisie', 'Championnat National', 'Coupe du Monde', 'Amical', 'Autre',
 ];
 
 const EVENT_TYPES = [
