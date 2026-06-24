@@ -20,63 +20,356 @@ type VisualDirection = {
   safetyRule: string;
 };
 
-const MERCATO_DIRECTIONS: readonly VisualDirection[] = [
-  {
-    profile: 'Mercato Elite Collage',
-    composition: 'double portrait hero (visage principal 65%, silhouette secondaire 30%) + joueur plein pied en bas centre, profondeur par plans',
-    lighting: 'contre-jour stadium + rim light doré/bleu sur contours, haut contraste cinématique',
-    typography: 'titre principal condensed uppercase + sous-titres fins espacés, hiérarchie nette (1 macro titre, 2 secondaires max)',
-    texture: 'fumée volumétrique subtile + grain film fin + particules lumineuses, sans surcharge',
-    cinematicDetail: 'intégrer blason géant en arrière-plan flou, architecture de stade et perspective urbaine premium',
-    safetyRule: 'interdire rendu “template générique”, interdire effet pinceau jaune dominant sur le titre',
-  },
-  {
-    profile: 'Mercato Editorial Mono Luxe',
-    composition: 'portrait central sculpté + personnage secondaire décadré à droite + bloc texte vertical éditorial',
-    lighting: 'lumière latérale douce + halo froid arrière, contraste local peau/tissu très maîtrisé',
-    typography: 'mix serif élégante pour nom + sans condensée pour infos transfert, pas de graisse uniforme partout',
-    texture: 'brume légère, micro-grain papier premium, dégradés propres sans bavure',
-    cinematicDetail: 'composer avec un monument de la ville et une géométrie de stade pour ancrer le club',
-    safetyRule: 'éviter look “affiche amateur IA”, éviter icônes ou stickers superflus',
-  },
-  {
-    profile: 'Mercato Neon Prestige',
-    composition: 'split diagonal entre ancien et nouveau club, sujet principal frontal, silhouettes de support en fond',
-    lighting: 'duo de lumières colorées complémentaires, rim néon subtil et reflets humides maîtrisés',
-    typography: 'headline monumental lisible + taglines minimalistes, kerning contrôlé',
-    texture: 'glow localisé, très léger halftone sur zones d’ombre, micro-contraste accentué',
-    cinematicDetail: 'ajouter un blason lumineux en contour et lignes d’énergie orientant le regard vers le nom',
-    safetyRule: 'pas d’excès de glow, pas de bouillie visuelle, pas de surcharge texte',
-  },
-];
+type AmbianceKey = 'electrique' | 'epique' | 'sobre-pro' | 'festif';
 
-const GENERAL_DIRECTIONS: readonly VisualDirection[] = [
-  {
-    profile: 'Football Cinematic Impact',
-    composition: 'focus héro central + fond stade contextuel + éléments secondaires discrets',
-    lighting: 'éclairage dramatique directionnel, contraste fort mais lisible',
-    typography: 'headline nette avec 1 style principal, sous-infos secondaires plus fines',
-    texture: 'grain subtil et profondeur atmosphérique légère',
-    cinematicDetail: 'ajouter mouvement et énergie sans surcharger la scène',
-    safetyRule: 'éviter le rendu répétitif de template',
-  },
-  {
-    profile: 'Football Editorial Clean',
-    composition: 'mise en page éditoriale claire, espaces négatifs utiles, sujet bien détaché',
-    lighting: 'lumière propre avec modelé réaliste des volumes',
-    typography: 'combinaison de titres structurés et micro-texte élégant',
-    texture: 'trame très légère, rendu premium net',
-    cinematicDetail: 'inclure un rappel identitaire du club sans envahir la composition',
-    safetyRule: 'pas d’effets gratuits ni d’ornements incohérents',
-  },
-];
+const DEFAULT_AMBIANCE: AmbianceKey = 'sobre-pro';
 
-function pickOne<T>(values: readonly T[]): T {
-  return values[Math.floor(Math.random() * values.length)];
+type VisualDirectionPools = Readonly<Record<AmbianceKey, readonly VisualDirection[]>>;
+
+const MERCATO_DIRECTIONS: VisualDirectionPools = {
+  electrique: [
+    {
+      profile: 'Mercato Voltage Arena',
+      composition: 'portrait principal frontal + silhouette secondaire en recul + axe diagonal de vitesse du coin haut gauche au bas droit',
+      lighting: 'flashs froids bleu-cyan et rim light blanc intense, contraste élevé mais propre sur le visage',
+      typography: 'headline condensed ultra lisible, accents typographiques courts et agressifs, sous-lignes en capitales espacées',
+      texture: 'particules d énergie fines, grain digital contrôlé, fumée nerveuse en arrière-plan',
+      cinematicDetail: 'insérer blason club en grand contour lumineux et lignes dynamiques orientées vers le nom du joueur',
+      safetyRule: 'éviter surcharge d effets et éviter les halos qui mangent la lisibilité du texte',
+    },
+    {
+      profile: 'Mercato Storm Pulse',
+      composition: 'double plan avec joueur net au premier plan et foule/stade compressés en arrière, cadrage légèrement contre-plongée',
+      lighting: 'éclairs stylisés en fond, key light dure sur le sujet, ombres marquées pour un impact immédiat',
+      typography: 'titre central monumental, micro-infos alignées en colonnes latérales, hiérarchie très tranchée',
+      texture: 'traces lumineuses directionnelles, micro-halftone sombre, poussières fines en suspension',
+      cinematicDetail: 'faire converger la perspective du stade vers le torse du joueur pour accentuer l effet annonce choc',
+      safetyRule: 'pas d effet pinceau aléatoire ni de mix de polices incohérent',
+    },
+    {
+      profile: 'Mercato Hyper Contrast',
+      composition: 'split vertical ancien/nouveau chapitre avec sujet principal traversant la séparation, profondeur en trois plans',
+      lighting: 'duo de lumières complémentaires très contrastées, reflets métalliques localisés sur les contours',
+      typography: 'nom joueur oversized, second niveau en tracking large, troisième niveau minimal discret',
+      texture: 'grain ciné fin, glow ponctuel localisé, fumée légère structurée par le vent',
+      cinematicDetail: 'blason flou monumental en fond et rails lumineux qui accompagnent la lecture titre vers date',
+      safetyRule: 'ne pas transformer l image en néon uniforme, préserver une zone de repos visuel',
+    },
+    {
+      profile: 'Mercato Tunnel Exit',
+      composition: 'sortie de tunnel avec sujet en marche au centre, silhouettes support en arrière et blocs texte ancrés en bas',
+      lighting: 'contre-jour puissant de tunnel + rim cyan électrique, point chaud sur regard et buste',
+      typography: 'titre compact en haut, bandeau info transfert en bas, contraste fort de taille entre niveaux',
+      texture: 'fumée dense contrôlée, particules brillantes rares, rendu net premium',
+      cinematicDetail: 'intégrer architecture du stade et bande lumineuse qui guide vers le nom du joueur',
+      safetyRule: 'éviter bruit excessif et toute confusion entre texte principal et éléments décoratifs',
+    },
+  ],
+  epique: [
+    {
+      profile: 'Mercato Heroic Monument',
+      composition: 'portrait héro sculptural au centre + plans secondaires en arc de cercle pour une lecture majestueuse',
+      lighting: 'lumière dorée de coucher de stade, ombres profondes cinématiques et halo noble arrière',
+      typography: 'combinaison serif prestige pour nom et sans condensée pour infos, hiérarchie ample et respirante',
+      texture: 'grain film organique, brume subtile, dégradés ambrés propres',
+      cinematicDetail: 'monument urbain du club en fond lointain, blason intégré comme emblème quasi institutionnel',
+      safetyRule: 'pas de kitsch fantasy, rester crédible et éditorial haut de gamme',
+    },
+    {
+      profile: 'Mercato Crowned Chapter',
+      composition: 'mise en scène tri-plan: sujet principal, passé en arrière diffus, futur symbolisé par ouverture lumineuse',
+      lighting: 'key light dramatique frontale + backlight chaud, forts volumes sans brûler les zones claires',
+      typography: 'titre solennel en capitales, intertitres raffinés, alignements stables',
+      texture: 'trame papier luxe discrète, poussière dorée ténue, contraste local peau/tissu élevé',
+      cinematicDetail: 'ajouter une perspective de tribunes monumentales pour donner l échelle du moment',
+      safetyRule: 'interdire style cheap blockbuster et ornements gratuits',
+    },
+    {
+      profile: 'Mercato Legacy Rise',
+      composition: 'sujet plein cadre avec extension du corps hors cadre, lignes architecturales qui montent vers le titre',
+      lighting: 'dramatic spotlight chaud/froid équilibré, accent sur visage et écusson',
+      typography: 'nom joueur grand format, sous-titres fins, rythme vertical clair',
+      texture: 'grain cinéma premium, fumée lente, relief textile maîtrisé',
+      cinematicDetail: 'ancrer le club via blason monumental semi-transparent et horizon de stade épique',
+      safetyRule: 'éviter aspect over-sharpened et éviter texte trop compact',
+    },
+    {
+      profile: 'Mercato Final Overture',
+      composition: 'composition symétrique noble avec sujet central, encadré par deux masses visuelles secondaires',
+      lighting: 'lumière théâtrale haut/bas, contraste profond avec lecture claire des traits',
+      typography: 'bloc titre haut impact, sous-infos alignées en ruban, élégance éditoriale',
+      texture: 'brume de scène, grain 35mm subtil, dégradés nobles sans artefacts',
+      cinematicDetail: 'placer un stade iconique en arrière-plan avec perspective grand-angle maîtrisée',
+      safetyRule: 'ne jamais sacrifier la lisibilité au profit du dramatique',
+    },
+  ],
+  'sobre-pro': [
+    {
+      profile: 'Mercato Boardroom Editorial',
+      composition: 'portrait net demi-buste, grille éditoriale rigoureuse, zones de respiration marquées',
+      lighting: 'lumière soft latérale, contraste modéré premium, rendu réaliste de la peau',
+      typography: 'sans-serif sobre avec une seule famille dominante, tailles hiérarchisées sans excès',
+      texture: 'micro-grain papier fin, fond propre, très faible bruit visuel',
+      cinematicDetail: 'rappel club discret via blason embossé et lignes de structure inspirées des dossiers presse',
+      safetyRule: 'interdire effets flashy, halos néon et surcharge décorative',
+    },
+    {
+      profile: 'Mercato Minimal Statement',
+      composition: 'sujet principal isolé sur fond structuré, colonnes d informations alignées au millimètre',
+      lighting: 'éclairage uniforme maîtrisé avec légère direction, ombres douces et crédibles',
+      typography: 'hiérarchie stricte, capitales mesurées, interlettrage contrôlé',
+      texture: 'surface matte propre, trame quasi invisible, transitions nettes',
+      cinematicDetail: 'insérer un motif de stade en filigrane géométrique sans voler l attention du sujet',
+      safetyRule: 'éviter tout effet sensationnaliste et conserver une sobriété institutionnelle',
+    },
+    {
+      profile: 'Mercato Press Kit Premium',
+      composition: 'portrait central + cartouche infos en bloc latéral, équilibre éditorial de magazine sportif',
+      lighting: 'key light neutre, modelé précis des volumes, haute lisibilité globale',
+      typography: 'mix rationnel de graisse regular/bold, pas de typo décorative',
+      texture: 'grain subtil quasi imperceptible, fond texturé léger',
+      cinematicDetail: 'ancrage identitaire par détail de tribune et blason monochrome en arrière-plan',
+      safetyRule: 'pas de couleurs agressives ni de rupture de style entre texte et image',
+    },
+    {
+      profile: 'Mercato Corporate Sport',
+      composition: 'mise en page claire avec axe vertical principal, priorisation de l information avant effet',
+      lighting: 'lumière froide contrôlée, contraste doux, rendu premium propre',
+      typography: 'titres nets, sous-texte compact, espacement généreux pour lecture immédiate',
+      texture: 'surface propre avec légère matière, aucun artefact flashy',
+      cinematicDetail: 'ajouter architecture de stade stylisée en contour fin pour contextualiser le club',
+      safetyRule: 'éviter style affiche fan-art et éviter collages trop chargés',
+    },
+  ],
+  festif: [
+    {
+      profile: 'Mercato Celebration Burst',
+      composition: 'sujet principal au centre avec éventail de confettis et second plan de supporters en liesse',
+      lighting: 'lumières de fête multicolores contrôlées, points chauds dynamiques, ambiance positive',
+      typography: 'headline impactante et joyeuse, sous-titres rythmés, accents colorés maîtrisés',
+      texture: 'confettis, fumée légère colorée, grain fin pour unité visuelle',
+      cinematicDetail: 'intégrer drapeaux et rubans lumineux du club en arrière-plan pour un reveal célébration',
+      safetyRule: 'éviter saturation excessive et préserver une lisibilité parfaite des infos clés',
+    },
+    {
+      profile: 'Mercato Carnival Night',
+      composition: 'plan principal frontal + scène de tribune festive en profondeur avec trajectoires courbes',
+      lighting: 'projecteurs colorés croisés, ambiance chaude et énergique sans brûler les tons peau',
+      typography: 'titre bold festif, labels courts, rythme typographique dynamique',
+      texture: 'particules lumineuses joyeuses, micro-glow localisé, fond texturé propre',
+      cinematicDetail: 'blason club animé visuellement par des arcs de lumière qui convergent vers le joueur',
+      safetyRule: 'ne pas transformer la scène en patchwork, conserver un axe de lecture clair',
+    },
+    {
+      profile: 'Mercato Fireworks Reveal',
+      composition: 'sujet en avant-scène avec feux de célébration flous en fond, profondeur très lisible',
+      lighting: 'éclats colorés derrière le joueur, face light neutre pour garder les détails',
+      typography: 'grand titre central festif, informations secondaires en rubans propres',
+      texture: 'étincelles fines, fumée festive légère, contraste local sur le sujet',
+      cinematicDetail: 'ajouter gestes de foule et écharpes club pour renforcer l effet annonce triomphale',
+      safetyRule: 'pas de bruit visuel excessif ni de texte noyé dans les effets',
+    },
+    {
+      profile: 'Mercato Victory Parade',
+      composition: 'cadre large avec joueur au premier plan et cortège visuel festif au second, structure diagonale montante',
+      lighting: 'lumière vive et chaleureuse, reflets colorés sur les bords, tonalité joyeuse',
+      typography: 'typo expressive mais propre, hiérarchie claire entre nom, annonce et détails',
+      texture: 'confettis fins, glow ponctuel, rendu premium net',
+      cinematicDetail: 'incorporer éléments de ville/stade et identité club dans une ambiance de célébration officielle',
+      safetyRule: 'éviter kitsch cartoon et préserver la crédibilité d une communication club',
+    },
+  ],
+};
+
+const GENERAL_DIRECTIONS: VisualDirectionPools = {
+  electrique: [
+    {
+      profile: 'Match Pulse Reactor',
+      composition: 'sujet principal en mouvement, diagonales rapides, second plan stade compressé pour sensation d urgence',
+      lighting: 'éclairage électrique bleu/blanc avec pics lumineux localisés, contraste fort lisible',
+      typography: 'titre condensed tranchant, sous-infos en blocs courts, rythme percutant',
+      texture: 'particules dynamiques et grain numérique fin',
+      cinematicDetail: 'ajouter traînées d énergie liées à la course et signalétique stade stylisée',
+      safetyRule: 'pas de fouillis d effets ni de texte illisible dans les zones lumineuses',
+    },
+    {
+      profile: 'Match High Voltage Clash',
+      composition: 'duel frontal ou sujet unique avec axe central, lignes d impact convergentes vers le cœur du visuel',
+      lighting: 'rim light froide intense, highlights tranchés, ombres denses contrôlées',
+      typography: 'headline massive, sous-titres minimalistes, espacement agressif maîtrisé',
+      texture: 'micro-fumée et étincelles discrètes, halftone léger sur les ombres',
+      cinematicDetail: 'faire apparaître blasons en arrière-plan comme masses lumineuses distinctes',
+      safetyRule: 'éviter surglow et éviter répétition de motifs identiques',
+    },
+    {
+      profile: 'Match Shockwave Sprint',
+      composition: 'sujet avancé au premier plan, perspective de terrain marquée, profondeur dynamique',
+      lighting: 'flash latéral + contre-jour, tonalité froide nerveuse',
+      typography: 'bloc titre haut impact et bandeau infos compact, hiérarchie nette',
+      texture: 'grain fin, traces de vitesse lumineuses, fumée légère',
+      cinematicDetail: 'intégrer marquages de pelouse et projecteurs pour renforcer l intensité du match',
+      safetyRule: 'pas d empilement d éléments décoratifs concurrents',
+    },
+    {
+      profile: 'Match Neon Kickoff',
+      composition: 'sujet central avec halo d énergie elliptique et contexte stade simplifié',
+      lighting: 'duo cyan/bleu électrique, forts contrastes sur contours, visage toujours lisible',
+      typography: 'titre principal direct, sous-infos alignées, labels courts',
+      texture: 'glow discret localisé, grain film subtil',
+      cinematicDetail: 'ajouter arcs lumineux orientés vers date et lieu pour guider la lecture',
+      safetyRule: 'interdire effet arcade exagéré et préserver un rendu premium',
+    },
+  ],
+  epique: [
+    {
+      profile: 'Match Grand Finale',
+      composition: 'sujet héroïque central, second plan monumental de stade, profondeur cinématique',
+      lighting: 'lumière dorée dramatique et contre-jour noble, forts volumes',
+      typography: 'titres majuscules élégants, sous-texte éditorial, respiration généreuse',
+      texture: 'grain 35mm discret, brume légère, rendu noble',
+      cinematicDetail: 'ajouter drapeaux et architecture emblématique pour renforcer l enjeu historique',
+      safetyRule: 'éviter ton caricatural, conserver crédibilité sportive haut de gamme',
+    },
+    {
+      profile: 'Match Legend Frame',
+      composition: 'cadrage large avec sujet au tiers, lignes de tribunes conduisant vers le titre',
+      lighting: 'éclairage théâtral chaud/froid équilibré, contraste maîtrisé',
+      typography: 'mix serif prestige + sans structurée, hiérarchie à trois niveaux',
+      texture: 'brume ciné, matière film subtile, noirs profonds propres',
+      cinematicDetail: 'insérer blason club en fond monumental semi-transparent',
+      safetyRule: 'pas de surcharge d effets pseudo-hollywood inutiles',
+    },
+    {
+      profile: 'Match Hero Overture',
+      composition: 'sujet en posture de défi, composition symétrique, masses visuelles équilibrées',
+      lighting: 'spot principal dramatique, rim chaud discret, lisibilité globale prioritaire',
+      typography: 'headline solennelle, sous-sections fines et précises',
+      texture: 'grain premium modéré, brume orchestrée',
+      cinematicDetail: 'intégrer horizon de stade et signalétique de compétition pour contextualiser l enjeu',
+      safetyRule: 'interdire mélange de styles contradictoires',
+    },
+    {
+      profile: 'Match Titan Night',
+      composition: 'double protagoniste en opposition noble, axe vertical fort et arrière-plan monumental',
+      lighting: 'contrast ratio élevé avec lueurs chaudes de foule, rendu dramatique propre',
+      typography: 'titre imposant lisible, micro-infos raffinées',
+      texture: 'halftone subtil, grain cinéma, nuages de fumée légère',
+      cinematicDetail: 'ajouter effet de profondeur tribunes et symbole club en filigrane',
+      safetyRule: 'ne pas sacrifier lisibilité des informations événementielles',
+    },
+  ],
+  'sobre-pro': [
+    {
+      profile: 'Match Editorial Precision',
+      composition: 'mise en page sobre, sujet isolé, espaces négatifs utiles et alignements rigoureux',
+      lighting: 'lumière neutre propre, contraste modéré, rendu réaliste',
+      typography: 'sans-serif institutionnelle, hiérarchie claire, pas de surcharge de graisse',
+      texture: 'fond mat texturé léger, grain minimal',
+      cinematicDetail: 'rappel identitaire du club discret et parfaitement intégré',
+      safetyRule: 'aucun effet flashy, aucune décoration gratuite',
+    },
+    {
+      profile: 'Match Clean Corporate',
+      composition: 'grille éditoriale avec blocs informationnels nets et sujet principal détaché',
+      lighting: 'éclairage homogène contrôlé, volumes doux',
+      typography: 'titres structurés, micro-texte lisible, tracking maîtrisé',
+      texture: 'trame légère premium, rendu net sans bruit',
+      cinematicDetail: 'inclure un motif de stade géométrique très discret',
+      safetyRule: 'éviter toute exagération cinématique non nécessaire',
+    },
+    {
+      profile: 'Match Minimal Pro Kit',
+      composition: 'sujet central et cartouches latéraux équilibrés, lecture immédiate de l information',
+      lighting: 'key light douce et arrière-plan contrôlé',
+      typography: 'style éditorial rationnel, contraste de tailles sobre',
+      texture: 'surface propre, micro-grain uniforme',
+      cinematicDetail: 'blason en emboss discret et lignes de terrain subtilement visibles',
+      safetyRule: 'pas de confusion entre décor et information utile',
+    },
+    {
+      profile: 'Match Studio Sport',
+      composition: 'portrait net avec structure modulaire, priorisation claire du contenu',
+      lighting: 'studio light sportive propre, ombres mesurées',
+      typography: 'titres droits et lisibles, sous-lignes courtes et élégantes',
+      texture: 'rendu lisse premium, bruit quasi nul',
+      cinematicDetail: 'ajouter uniquement un contexte club léger pour ancrer le visuel',
+      safetyRule: 'éviter style fan-art et excès de contrastes artificiels',
+    },
+  ],
+  festif: [
+    {
+      profile: 'Match Celebration Wave',
+      composition: 'sujet central et tribunes festives en arrière-plan, dynamique ascendante',
+      lighting: 'éclairage joyeux multicolore contrôlé, tonalité chaude positive',
+      typography: 'titre impactant convivial, sous-infos rythmées, hiérarchie nette',
+      texture: 'confettis fins, glow ponctuel, grain léger',
+      cinematicDetail: 'ajouter drapeaux et fumigènes colorés maîtrisés pour une énergie de fête',
+      safetyRule: 'ne pas noyer le texte dans les effets festifs',
+    },
+    {
+      profile: 'Match Color Parade',
+      composition: 'scène ouverte avec sujet mis en avant et foule célébrante en profondeur',
+      lighting: 'projecteurs colorés doux et équilibrés, visage toujours lisible',
+      typography: 'headline expressive mais propre, labels courts et clairs',
+      texture: 'particules lumineuses joyeuses et micro-fumée',
+      cinematicDetail: 'intégrer accessoires supporters et identité club de manière harmonieuse',
+      safetyRule: 'éviter surcharge de couleurs discordantes',
+    },
+    {
+      profile: 'Match Festival Kickoff',
+      composition: 'sujet principal en action, arc visuel de célébration autour du centre',
+      lighting: 'lumières de fête en fond avec key light neutre sur le sujet',
+      typography: 'titre lisible en bloc central et infos événement en bandeau stable',
+      texture: 'confettis subtils, grain fin, contraste local soigné',
+      cinematicDetail: 'placer éléments de stade et de club comme repères festifs premium',
+      safetyRule: 'pas de rendu cartoon ni d accumulation d icônes inutiles',
+    },
+    {
+      profile: 'Match Joyful Derby Night',
+      composition: 'duel ou sujet unique avec arrière-plan de supporters lumineux et profondeur respirante',
+      lighting: 'ambiance vive festive, reflets colorés modérés, exposition équilibrée',
+      typography: 'mix de titres énergiques et sous-textes sobres pour garder l équilibre',
+      texture: 'étincelles fines, fumée légère, finition premium',
+      cinematicDetail: 'ancrer la célébration via drapeaux, tribunes et signatures visuelles club',
+      safetyRule: 'préserver la clarté narrative et éviter la saturation extrême',
+    },
+  ],
+};
+
+function normalizeAmbiance(rawAmbiance: string): AmbianceKey {
+  const normalized = (rawAmbiance ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const aliasMap: Record<string, AmbianceKey> = {
+    electrique: 'electrique',
+    epique: 'epique',
+    festif: 'festif',
+    'sobre-pro': 'sobre-pro',
+    sobrepro: 'sobre-pro',
+    'sobre-et-pro': 'sobre-pro',
+  };
+
+  return aliasMap[normalized] ?? DEFAULT_AMBIANCE;
 }
 
-function getVisualDirection(isTransferEvent: boolean): VisualDirection {
-  return pickOne(isTransferEvent ? MERCATO_DIRECTIONS : GENERAL_DIRECTIONS);
+function hashToIndex(seed: string, poolSize: number): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) % 999999;
+  }
+  return hash % poolSize;
+}
+
+function getVisualDirection(ambiance: string, isTransferEvent: boolean, seed: string): VisualDirection {
+  const normalizedAmbiance = normalizeAmbiance(ambiance);
+  const directionPools = isTransferEvent ? MERCATO_DIRECTIONS : GENERAL_DIRECTIONS;
+  const pool = directionPools[normalizedAmbiance] ?? directionPools[DEFAULT_AMBIANCE];
+  const safeSeed = seed?.trim() || 'club-inconnu';
+  return pool[hashToIndex(safeSeed, pool.length)];
 }
 
 function toErrorMessage(value: unknown): string {
@@ -156,7 +449,7 @@ function buildPrompt(data: {
   description: string;
 }): string {
   const isTransferEvent = data.posterType === 'annonce' && (data.eventType === 'recrutement' || data.eventType === 'transfert');
-  const visualDirection = getVisualDirection(isTransferEvent);
+  const visualDirection = getVisualDirection(data.style, isTransferEvent, data.homeTeam);
   const teamDescriptor = data.awayTeam
     ? `${data.homeTeam} vs ${data.awayTeam}`
     : data.homeTeam;

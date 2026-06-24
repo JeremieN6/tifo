@@ -1068,7 +1068,7 @@ export default function CreatePage() {
                 <div>
                   <label className="mb-1 block font-body text-[10px] font-bold uppercase tracking-[0.25em] text-green-700">
                     Description libre
-                    <span className="ml-2 font-normal text-slate-600">(optionnel)</span>
+                    <span className="ml-2 font-normal text-slate-600">(optionnel mais recommandé)</span>
                   </label>
                   <p className="mb-2 font-body text-xs text-slate-600">
                     Décris l&apos;affiche idéale en détail : ambiance, palette, lumière, composition, typographies. Tu peux aussi ajouter une ou plusieurs images de référence pour guider le style visuel.
