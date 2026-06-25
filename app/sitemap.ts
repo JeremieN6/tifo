@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { readdir } from 'node:fs/promises';
 import { join, posix } from 'node:path';
+import { getPublishedBlogSlugs } from '@/lib/blog';
 
 const APP_DIR = join(process.cwd(), 'app');
 
@@ -57,14 +58,29 @@ async function collectStaticRoutes(dir: string, segments: string[] = []): Promis
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getBaseUrl();
   const routes = await collectStaticRoutes(APP_DIR);
+  let blogRoutes: MetadataRoute.Sitemap = [];
 
-  return routes
+  try {
+    const blogSlugs = await getPublishedBlogSlugs(1000);
+    blogRoutes = blogSlugs.map((post) => ({
+      url: `${baseUrl}/blog/${post.slug}`,
+      lastModified: new Date(post.published_at ?? post.created_at),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+  } catch (error) {
+    console.error('[sitemap/blog]', error);
+  }
+
+  const staticRoutes = routes
     .filter((route, index, all) => all.indexOf(route) === index)
     .sort((a, b) => a.localeCompare(b))
     .map((route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: 'weekly' as const,
       priority: route === '/' ? 1 : 0.7,
     }));
+
+  return [...staticRoutes, ...blogRoutes];
 }

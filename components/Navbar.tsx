@@ -56,6 +56,9 @@ export default function Navbar({ createStep }: { createStep?: { current: number;
               <Link href="#fonctionnalites" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 transition-colors duration-200 hover:text-green-400">
                 Fonctionnalités
               </Link>
+              <Link href="/blog" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 transition-colors duration-200 hover:text-green-400">
+                Blog
+              </Link>
               <Link href="#pricing" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 transition-colors duration-200 hover:text-green-400">
                 Tarif
               </Link>
@@ -139,6 +142,7 @@ export default function Navbar({ createStep }: { createStep?: { current: number;
           {menuOpen && (
             <div className="flex flex-col gap-4 border-t border-green-900/20 bg-[#020f07] px-6 py-4 md:hidden">
               <Link href="#fonctionnalites" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400" onClick={() => setMenuOpen(false)}>Fonctionnalités</Link>
+              <Link href="/blog" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400" onClick={() => setMenuOpen(false)}>Blog</Link>
               <Link href="#pricing" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400" onClick={() => setMenuOpen(false)}>Tarif</Link>
               <Link href="#faq" className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400" onClick={() => setMenuOpen(false)}>FAQ</Link>
               {session ? (

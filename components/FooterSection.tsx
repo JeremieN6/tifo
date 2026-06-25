@@ -28,6 +28,7 @@ export default function FooterSection() {
             <nav className="mt-4 flex flex-col gap-3">
               {[
                 { label: 'Fonctionnalités', href: '/#fonctionnalites' },
+                { label: 'Blog', href: '/blog' },
                 { label: 'Comment ça marche', href: '/#how-it-works' },
                 { label: 'Tarifs', href: '/#pricing' },
                 { label: 'FAQ', href: '/#faq' },

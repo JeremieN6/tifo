@@ -5,6 +5,14 @@
 ---
 
 ## En cours
+- [x] [Session] Blog automation: définir architecture (queue seed + cron quotidien + fallback hebdo)
+- [x] [Session] Blog automation: créer schéma SQL (`blog_article_queue`, `blog_articles`)
+- [x] [Session] Blog automation: implémenter service serveur (parsing seed + génération OpenAI + persistance)
+- [x] [Session] Blog automation: créer endpoint cron `/api/cron/blog-articles`
+- [x] [Session] Blog automation: exposer pages SEO `/blog` et `/blog/[slug]`
+- [x] [Session] Blog automation: brancher sitemap + liens navigation
+- [ ] [Session] Blog automation: appliquer `db/blog_automation.sql` sur la base Neon de dev/prod
+- [ ] [Session] Blog automation: configurer cron host (1 run/jour) + vérifier premier run réel
 - [x] [Session] Renforcer la DA transfert/mercato (prompt premium + variations de lumière/composition/typo/texture)
 - [ ] [Session] Tester 10 générations transfert pour valider la non-répétition visuelle
 - [x] [Session] Finaliser `posthog wizard doctor/audit` sur poste non restreint (configuration validée; la dernière étape du wizard reste TTY interactif)

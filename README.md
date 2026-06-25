@@ -80,6 +80,44 @@ npm run build
 npm start
 ```
 
+## Automatisation blog (1 article / jour)
+
+Le projet inclut un pipeline blog automatisé :
+
+- Source primaire: `tmp/todo/auto-blog-article.md`
+- Endpoint cron: `POST /api/cron/blog-articles`
+- Auth cron: `Authorization: Bearer <CRON_SECRET>` ou header `x-cron-secret`
+- Comportement:
+	- synchronise les prompts du fichier source vers une queue SQL,
+	- génère et publie un article par exécution du cron,
+	- quand la queue seed est vide, génère un nouveau prompt automatiquement 1 fois par semaine.
+
+### Setup SQL
+
+Importer aussi le schéma suivant dans PostgreSQL:
+
+- `db/blog_automation.sql`
+
+### Variables d'environnement liées
+
+- `OPENAI_API_KEY`
+- `CRON_SECRET`
+- `BLOG_ARTICLE_MODEL` (optionnel, défaut `gpt-4.1-mini`)
+- `BLOG_ARTICLE_SEED_FILE` (optionnel, défaut `tmp/todo/auto-blog-article.md`)
+- `BLOG_AUTO_PUBLISH` (optionnel, défaut `true`)
+
+### Exemple déclenchement manuel
+
+```bash
+curl -X POST https://ton-domaine/api/cron/blog-articles \
+	-H "Authorization: Bearer <CRON_SECRET>"
+```
+
+### Pages publiques
+
+- Listing: `/blog`
+- Détail: `/blog/[slug]`
+
 ## Contribuer
 
 - Ouvrir une issue pour demander des changements.
