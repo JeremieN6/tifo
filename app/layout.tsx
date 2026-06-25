@@ -20,6 +20,9 @@ const barlow = Barlow({
 export const metadata: Metadata = {
   title: 'Tifo — Générateur d\'affiches de match',
   description: 'Générez des affiches de match percutantes grâce à l\'IA, en quelques clics.',
+  verification: {
+    google: 'dS4lDtb3GkUFSthFb5DQkzfwTUYCP_dKFWE5m1s7V8E',
+  },
   openGraph: {
     title: 'Tifo — Générateur d\'affiches de match',
     description: 'Générez des affiches de match percutantes, automatiquement.',
