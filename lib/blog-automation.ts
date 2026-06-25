@@ -104,13 +104,15 @@ function toSlug(value: string): string {
   return base.slice(0, 200) || `article-${Date.now()}`;
 }
 
-function normalizeGeneratedArticle(data: any): GeneratedBlogArticle {
-  const title = String(data?.title ?? '').trim();
-  const excerpt = String(data?.excerpt ?? '').trim();
-  const metaDescription = String(data?.metaDescription ?? '').trim();
-  const contentMarkdown = String(data?.contentMarkdown ?? '').trim();
+function normalizeGeneratedArticle(data: unknown): GeneratedBlogArticle {
+  const payload = data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
 
-  const rawKeywords = Array.isArray(data?.targetKeywords) ? data.targetKeywords : [];
+  const title = String(payload.title ?? '').trim();
+  const excerpt = String(payload.excerpt ?? '').trim();
+  const metaDescription = String(payload.metaDescription ?? '').trim();
+  const contentMarkdown = String(payload.contentMarkdown ?? '').trim();
+
+  const rawKeywords = Array.isArray(payload.targetKeywords) ? payload.targetKeywords : [];
   const targetKeywords = rawKeywords
     .map((keyword: unknown) => String(keyword).trim())
     .filter(Boolean)
@@ -120,7 +122,7 @@ function normalizeGeneratedArticle(data: any): GeneratedBlogArticle {
     throw new Error('Le JSON article est incomplet');
   }
 
-  const slug = toSlug(String(data?.slug ?? title));
+  const slug = toSlug(String(payload.slug ?? title));
 
   return {
     title,

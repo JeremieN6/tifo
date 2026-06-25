@@ -58,3 +58,9 @@
 **Cause racine** : Confusion entre mecanique produit et promesse commerciale segmentee ; absence de validation du perimetre d eligibilite avant implementation.
 **Solution** : Revenir a une creation par defaut en Starter et conserver l attribution du trial Club via action manuelle ciblee (SQL/backoffice).
 **Regle** : Toute offre acquisition reservee a un segment doit avoir un mecanisme d eligibilite explicite ; ne jamais l activer globalement au signup sans filtre metier.
+
+### [2026-06-25] Build CI casse par no-explicit-any
+**Probleme** : Le deploiement VPS echouait pendant `next build` a cause d une violation ESLint `@typescript-eslint/no-explicit-any` dans la feature blog automation.
+**Cause racine** : Typage rapide avec `any` dans un parser JSON sans verifier la contrainte lint de la CI.
+**Solution** : Remplacer `any` par `unknown` + narrowing (`Record<string, unknown>`) et relancer `npm run build` localement pour reproduire exactement la CI.
+**Regle** : Pour toute nouvelle feature, faire un `npm run build` local avant push (pas seulement `tsc`) afin de capter lint + typecheck comme en pipeline.
