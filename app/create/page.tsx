@@ -601,7 +601,7 @@ export default function CreatePage() {
   const awayTeamLabel = isTransferFlow
     ? 'À (nouveau club) *'
     : isFlexibleAnnouncement
-      ? 'Équipe B (optionnel)'
+      ? 'Équipe B'
       : 'Équipe B (Extérieur) *';
   const homeTeamPlaceholder = isTransferFlow
     ? 'ex. Olympique Lyonnais'
@@ -614,7 +614,7 @@ export default function CreatePage() {
       ? 'ex. Club invité'
       : 'ex. Olympique de Marseille';
   const homeLogoTitle = isTransferFlow ? 'De' : isFlexibleAnnouncement ? 'Club principal' : 'Équipe A';
-  const awayLogoTitle = isTransferFlow ? 'À' : isFlexibleAnnouncement ? 'Équipe B (optionnel)' : 'Équipe B';
+  const awayLogoTitle = isTransferFlow ? 'À' : isFlexibleAnnouncement ? 'Équipe Extérieur' : 'Équipe B';
   const recapFaceOff = isTransferFlow
     ? (data.homeTeam && data.awayTeam ? `De ${data.homeTeam} à ${data.awayTeam}` : '—')
     : (data.homeTeam && data.awayTeam ? `${data.homeTeam} vs ${data.awayTeam}` : data.homeTeam || '—');
@@ -903,7 +903,7 @@ export default function CreatePage() {
             {step === 2 && (
               <div className="animate-fade-in-up space-y-5">
                 <p className="font-body text-sm text-slate-400">
-                  Logos récupérés automatiquement — vous pouvez les remplacer manuellement.
+                  Logos récupérés automatiquement, vous pouvez les remplacer manuellement.
                 </p>
                 <div className="grid grid-cols-2 gap-5">
                   {/* Home logo */}
