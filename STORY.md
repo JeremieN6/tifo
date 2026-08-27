@@ -11,7 +11,7 @@ Tifo permet a un club, un supporter ou un media sportif de generer en quelques c
 ---
 
 ## Statut actuel
-Le produit est fonctionnel de bout en bout : inscription, generation d'affiches avec logos de clubs auto-remplis, abonnement payant (Stripe), back-office admin pour gerer les comptes et les essais gratuits, et un blog automatise pour l'acquisition SEO. Le projet est en phase de pre-lancement : la mise en production reelle (VPS, paiement test, verification email) reste a faire.
+Le produit est fonctionnel de bout en bout : inscription, generation d'affiches avec logos de clubs auto-remplis, abonnement payant (Stripe), back-office admin pour gerer les comptes et les essais gratuits, et un blog automatise pour l'acquisition SEO. Le projet est en phase de lancement : la mise en production reelle, VPS, paiement, verification email est ok. Les premiers clubs ont été contacté sur Insta, le marketing a donc commencé via cold DM Insta. Quelques inscriptions ont déjà été enregistrés.
 
 ---
 
