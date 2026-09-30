@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Bebas_Neue, Barlow } from 'next/font/google';
 import './globals.css';
 import SessionProvider from '@/components/SessionProvider';
+import { getSiteUrl } from '@/lib/seo';
 
 const bebasNeue = Bebas_Neue({
   weight: '400',
@@ -18,6 +19,7 @@ const barlow = Barlow({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: 'Tifo — Générateur d\'affiches de match',
   description: 'Générez des affiches de match percutantes grâce à l\'IA, en quelques clics.',
   verification: {

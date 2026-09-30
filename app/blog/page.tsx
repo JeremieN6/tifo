@@ -3,11 +3,15 @@ import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/FooterSection';
 import { getPublishedBlogArticles } from '@/lib/blog';
+import { canonicalUrl } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Blog Tifo | Conseils marketing et visuels matchday',
+  title: 'Blog Tifo | Affiches et communication pour clubs amateurs',
   description:
-    'Articles pratiques pour clubs amateurs: affiches de match, contenu social multi-format, IA et stratégie de communication sportive.',
+    'Guides pratiques pour dirigeants et bénévoles de clubs amateurs : créer des affiches d\'annonce, de recrutement et de match sans graphiste, avec ou sans IA.',
+  alternates: {
+    canonical: canonicalUrl('/blog'),
+  },
 };
 
 function formatDate(value: string | null): string {
@@ -32,10 +36,10 @@ export default async function BlogPage() {
         <header className="mb-12">
           <p className="font-body text-xs uppercase tracking-[0.25em] text-green-500/80">Blog</p>
           <h1 className="mt-3 font-display text-4xl uppercase tracking-tight sm:text-5xl">
-            Marketing sportif et contenu matchday
+            Affiches et communication pour clubs amateurs
           </h1>
           <p className="mt-4 max-w-3xl font-body text-base leading-relaxed text-slate-300">
-            Guides et comparatifs pour aider les clubs amateurs à gagner du temps et publier des visuels plus impactants sur Instagram, X et YouTube.
+            Guides pratiques pour dirigeants et bénévoles de clubs amateurs : créer une affiche d&apos;annonce, de recrutement ou de match rapidement, sans graphiste ni logiciel compliqué.
           </p>
         </header>
 

@@ -10,11 +10,17 @@ export type BlogArticlePreview = {
   created_at: string;
 };
 
+export type BlogFaqItem = {
+  question: string;
+  answer: string;
+};
+
 export type BlogArticle = BlogArticlePreview & {
   content_markdown: string;
   meta_description: string;
   target_keywords: string[];
   prompt: string;
+  faq_json: BlogFaqItem[] | null;
 };
 
 export async function getPublishedBlogArticles(limit = 50): Promise<BlogArticlePreview[]> {
@@ -43,7 +49,8 @@ export async function getPublishedBlogArticleBySlug(slug: string): Promise<BlogA
       content_markdown,
       meta_description,
       target_keywords,
-      prompt
+      prompt,
+      faq_json
      FROM blog_articles
      WHERE slug = $1 AND is_published = true
      LIMIT 1`,

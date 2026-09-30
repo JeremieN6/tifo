@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/FooterSection';
 import { getPublishedBlogArticleBySlug } from '@/lib/blog';
+import { canonicalUrl } from '@/lib/seo';
 
 type ArticlePageProps = {
   params: {
@@ -96,6 +97,9 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   return {
     title: `${article.title} | Blog Tifo`,
     description: article.meta_description,
+    alternates: {
+      canonical: canonicalUrl(`/blog/${article.slug}`),
+    },
     openGraph: {
       title: article.title,
       description: article.meta_description,
@@ -129,9 +133,44 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <div className="mt-8 border-t border-green-900/30 pt-2">
             {renderMarkdownBlocks(article.content_markdown)}
           </div>
+
+          {article.faq_json && article.faq_json.length > 0 && (
+            <div className="mt-10 border-t border-green-900/30 pt-8">
+              <h2 className="font-body text-2xl font-semibold text-white">Foire aux questions</h2>
+              <div className="mt-6 space-y-6">
+                {article.faq_json.map((item) => (
+                  <div key={item.question}>
+                    <h3 className="font-body text-lg font-semibold text-white">{item.question}</h3>
+                    <p className="mt-2 font-body text-base leading-relaxed text-slate-300">{item.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </article>
       </main>
       <FooterSection />
+
+      {article.faq_json && article.faq_json.length > 0 && (
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'FAQPage',
+              mainEntity: article.faq_json.map((item) => ({
+                '@type': 'Question',
+                name: item.question,
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: item.answer,
+                },
+              })),
+            }),
+          }}
+        />
+      )}
     </div>
   );
 }

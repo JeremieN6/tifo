@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS blog_articles (
   meta_description TEXT NOT NULL,
   content_markdown TEXT NOT NULL,
   target_keywords TEXT[] NOT NULL DEFAULT '{}',
+  faq_json JSONB,
   is_published BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   published_at TIMESTAMP

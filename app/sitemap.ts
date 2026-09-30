@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { readdir } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 import { getPublishedBlogSlugs } from '@/lib/blog';
+import { getSiteUrl } from '@/lib/seo';
 
 const APP_DIR = join(process.cwd(), 'app');
 
@@ -18,11 +19,6 @@ const EXCLUDED_SEGMENTS = new Set([
   '_lib',
   '_utils',
 ]);
-
-function getBaseUrl(): string {
-  const envUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL;
-  return (envUrl ?? 'https://example.com').replace(/\/$/, '');
-}
 
 function isIgnoredSegment(segment: string): boolean {
   // Skip route groups, private folders and dynamic segments.
@@ -62,7 +58,7 @@ async function collectStaticRoutes(dir: string, segments: string[] = []): Promis
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = getBaseUrl();
+  const baseUrl = getSiteUrl();
   const routes = await collectStaticRoutes(APP_DIR);
   let blogRoutes: MetadataRoute.Sitemap = [];
 
