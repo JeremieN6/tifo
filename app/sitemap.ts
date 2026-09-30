@@ -8,6 +8,7 @@ const APP_DIR = join(process.cwd(), 'app');
 const EXCLUDED_SEGMENTS = new Set([
   'api',
   'admin',
+  'create',
   '_components',
   '_lib',
   '_utils',
