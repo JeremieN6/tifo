@@ -533,20 +533,12 @@ export default function CreatePage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        captureClientEvent('poster_generation_failed', {
-          reason: json.error ?? 'api_error',
-          poster_type: posterType || 'unknown',
-          event_type: posterType === 'annonce' ? data.eventType : 'match',
-        });
+        // Pas de capture ici : l'API a déjà émis poster_generation_failed côté serveur
+        // pour cet échec (avec un `reason` plus fiable). Dupliquer ici fausserait les
+        // compteurs PostHog (comptage x2 des mêmes échecs).
         setGenError(json.error ?? 'Erreur lors de la génération.');
       } else {
-        captureClientEvent('poster_generation_succeeded', {
-          poster_type: posterType || 'unknown',
-          event_type: posterType === 'annonce' ? data.eventType : 'match',
-          output_format: selectedFormat,
-          reference_images_count: data.referenceImages.length,
-          plan: quota?.plan ?? 'starter',
-        });
+        // Idem : poster_generation_succeeded est déjà émis côté serveur.
         setGeneratedImage(json.image);
         setStep(5);
       }

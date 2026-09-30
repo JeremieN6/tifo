@@ -413,6 +413,24 @@ function classifyGenerationError(err: unknown, stage: string) {
     };
   }
 
+  if (message.includes('no credits remaining') || message.includes('billing')) {
+    return {
+      status: 429,
+      reason: 'openai_no_credits',
+      userMessage: 'Service de generation temporairement indisponible (credit OpenAI epuise). Contactez le support.',
+    };
+  }
+
+  const isOpenAIStage = stage.startsWith('openai_');
+
+  if (isOpenAIStage && message.includes('connection')) {
+    return {
+      status: 503,
+      reason: 'openai_connection_error',
+      userMessage: 'Le service de generation d\'images est temporairement injoignable. Reessayez dans quelques instants.',
+    };
+  }
+
   if (message.includes('connection') || message.includes('database')) {
     return {
       status: 503,
