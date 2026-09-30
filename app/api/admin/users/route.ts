@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getAllUsers, getUserById, logAdminAction, setUserAdmin, setUserPlan } from '@/lib/admin';
 import {
+  buildActivationNudgeEmail,
+  buildGenerationIncidentResolvedEmail,
   buildSignupWelcomeEmail,
   buildTrialEndedEmail,
   buildTrialReminderEmail,
@@ -154,6 +156,38 @@ export async function POST(req: Request) {
       subject: 'Tifo - Votre essai Club est terminé',
       html: buildTrialEndedEmail(displayName, appUrl),
       text: 'Votre essai Club est terminé et votre compte est repassé sur Starter.',
+    });
+    await logAdminAction({
+      actorUserId: String(session.user.id),
+      targetUserId: String(userId),
+      actionType: 'email_sent',
+      metadata: { template },
+    });
+    return NextResponse.json({ success: true });
+  }
+
+  if (template === 'generation_incident_resolved') {
+    await sendEmail({
+      to: user.email,
+      subject: 'Tifo - Votre génération d\'affiche vous attend (incident résolu)',
+      html: buildGenerationIncidentResolvedEmail(displayName, appUrl),
+      text: 'Un incident technique ponctuel a interrompu une de vos générations. C\'est corrigé, vos créations gratuites sont toujours disponibles.',
+    });
+    await logAdminAction({
+      actorUserId: String(session.user.id),
+      targetUserId: String(userId),
+      actionType: 'email_sent',
+      metadata: { template },
+    });
+    return NextResponse.json({ success: true });
+  }
+
+  if (template === 'activation_nudge') {
+    await sendEmail({
+      to: user.email,
+      subject: 'Tifo - Vos 3 affiches gratuites vous attendent toujours',
+      html: buildActivationNudgeEmail(appUrl),
+      text: 'Votre compte Tifo est prêt et vos 3 créations gratuites sont toujours disponibles.',
     });
     await logAdminAction({
       actorUserId: String(session.user.id),

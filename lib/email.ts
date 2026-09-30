@@ -216,6 +216,88 @@ export function buildTrialReminderEmail(name: string, trialEndsAt: Date, daysLef
 </html>`;
 }
 
+export function buildGenerationIncidentResolvedEmail(name: string, appUrl: string): string {
+  const safeName = name?.trim() || 'Champion';
+
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Votre génération Tifo vous attend</title>
+</head>
+<body style="margin:0;padding:0;background:#020f07;color:#f8fafc;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#052e16;border:1px solid #166534;">
+          <tr>
+            <td style="padding:28px;">
+              <p style="margin:0 0 8px;color:#22c55e;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Incident résolu</p>
+              <h1 style="margin:0 0 14px;font-size:30px;line-height:1.1;color:#ffffff;">Votre génération d'affiche vous attend</h1>
+              <p style="margin:0 0 14px;color:#d1d5db;font-size:16px;line-height:1.5;">
+                Bonjour ${safeName}, nous avons vu qu'une de vos générations récentes ne s'était pas terminée correctement.
+              </p>
+              <p style="margin:0 0 14px;color:#d1d5db;font-size:14px;line-height:1.5;">
+                Ce n'était pas lié à votre compte : un incident technique ponctuel de notre côté a interrompu le traitement. Le problème est identifié et corrigé.
+              </p>
+              <p style="margin:0 0 20px;color:#d1d5db;font-size:14px;line-height:1.5;">
+                Vos créations gratuites sont toujours disponibles sur votre compte — vous pouvez relancer votre affiche dès maintenant.
+              </p>
+              <a href="${appUrl}/create" style="display:inline-block;padding:12px 20px;background:#22c55e;color:#052e16;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:1px;font-size:12px;">
+                Relancer ma génération
+              </a>
+              <p style="margin:22px 0 0;color:#94a3b8;font-size:12px;line-height:1.6;">
+                Si le souci revient, répondez directement à cet email, nous reviendrons vers vous rapidement.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+export function buildActivationNudgeEmail(appUrl: string): string {
+  return `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vos affiches gratuites Tifo vous attendent</title>
+</head>
+<body style="margin:0;padding:0;background:#020f07;color:#f8fafc;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#052e16;border:1px solid #166534;">
+          <tr>
+            <td style="padding:28px;">
+              <p style="margin:0 0 8px;color:#22c55e;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Toujours disponible</p>
+              <h1 style="margin:0 0 14px;font-size:30px;line-height:1.1;color:#ffffff;">Vos 3 affiches gratuites vous attendent toujours</h1>
+              <p style="margin:0 0 14px;color:#d1d5db;font-size:16px;line-height:1.5;">
+                Bonjour, votre compte Tifo est prêt, mais vous n'avez pas encore testé la génération d'affiche.
+              </p>
+              <p style="margin:0 0 20px;color:#d1d5db;font-size:14px;line-height:1.5;">
+                Annonce de match, de transfert ou d'événement : Tifo génère votre affiche en quelques secondes, prête à partager.
+              </p>
+              <a href="${appUrl}/create" style="display:inline-block;padding:12px 20px;background:#22c55e;color:#052e16;font-weight:800;text-decoration:none;text-transform:uppercase;letter-spacing:1px;font-size:12px;">
+                Créer ma première affiche
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function buildTrialEndedEmail(name: string, appUrl: string): string {
   const safeName = name?.trim() || 'Champion';
 
