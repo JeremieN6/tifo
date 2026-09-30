@@ -371,6 +371,8 @@ export default function AdminPage() {
                         <option value="trial_welcome">trial_welcome</option>
                         <option value="trial_reminder_7">trial_reminder_7</option>
                         <option value="trial_ended">trial_ended</option>
+                        <option value="generation_incident_resolved">generation_incident_resolved</option>
+                        <option value="activation_nudge">activation_nudge</option>
                         <option value="custom">custom</option>
                       </select>
                       {selectedTemplateByUser[user.id] === 'custom' && (
