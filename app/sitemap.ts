@@ -5,10 +5,15 @@ import { getPublishedBlogSlugs } from '@/lib/blog';
 
 const APP_DIR = join(process.cwd(), 'app');
 
+// Routes protégées par le middleware next-auth (voir middleware.ts) : elles
+// redirigent systématiquement vers /api/auth/signin pour un visiteur non
+// connecté et ne sont donc jamais crawlables.
+const AUTH_PROTECTED_SEGMENTS = ['create', 'dashboard', 'account'];
+
 const EXCLUDED_SEGMENTS = new Set([
   'api',
   'admin',
-  'create',
+  ...AUTH_PROTECTED_SEGMENTS,
   '_components',
   '_lib',
   '_utils',
