@@ -5,6 +5,8 @@ import FooterSection from '@/components/FooterSection';
 import { getPublishedBlogArticles } from '@/lib/blog';
 import { canonicalUrl } from '@/lib/seo';
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: 'Blog Tifo | Affiches et communication pour clubs amateurs',
   description:

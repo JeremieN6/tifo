@@ -6,6 +6,8 @@ import FooterSection from '@/components/FooterSection';
 import { getPublishedBlogArticleBySlug } from '@/lib/blog';
 import { canonicalUrl } from '@/lib/seo';
 
+export const revalidate = 300;
+
 type ArticlePageProps = {
   params: {
     slug: string;

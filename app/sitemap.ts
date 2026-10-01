@@ -4,6 +4,8 @@ import { join, posix } from 'node:path';
 import { getPublishedBlogSlugs } from '@/lib/blog';
 import { getSiteUrl } from '@/lib/seo';
 
+export const revalidate = 300;
+
 const APP_DIR = join(process.cwd(), 'app');
 
 // Routes protégées par le middleware next-auth (voir middleware.ts) : elles
