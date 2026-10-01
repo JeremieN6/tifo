@@ -5,10 +5,66 @@ import { getUserAccess, decrementQuota } from '@/lib/billing';
 import { savePosterHistory } from '@/lib/poster-history';
 import { put } from '@vercel/blob';
 import OpenAI from 'openai';
+import sharp from 'sharp';
 import { captureServerEvent } from '@/lib/posthog-server';
 
 const MAX_REFERENCE_IMAGES = 3;
 const MAX_REFERENCE_IMAGE_BYTES = 5 * 1024 * 1024;
+
+type OutputFormatKey = 'square_1_1' | 'story_9_16' | 'x_banner' | 'youtube_thumbnail';
+
+type OutputFormatConfig = {
+  // Taille demandee a gpt-image-1 (le modele ne supporte que ces 3 ratios + 'auto').
+  generationSize: '1024x1024' | '1024x1536' | '1536x1024';
+  // Dimensions finales livrees a l'utilisateur, apres recadrage centre.
+  width: number;
+  height: number;
+};
+
+const OUTPUT_FORMATS: Record<OutputFormatKey, OutputFormatConfig> = {
+  square_1_1: { generationSize: '1024x1024', width: 1080, height: 1080 },
+  story_9_16: { generationSize: '1024x1536', width: 1080, height: 1920 },
+  x_banner: { generationSize: '1536x1024', width: 1500, height: 500 },
+  youtube_thumbnail: { generationSize: '1536x1024', width: 1280, height: 720 },
+};
+
+function parseOutputFormat(value: FormDataEntryValue | null): OutputFormatKey {
+  return typeof value === 'string' && value in OUTPUT_FORMATS ? (value as OutputFormatKey) : 'square_1_1';
+}
+
+async function cropToFormat(sourceBuffer: Buffer, format: OutputFormatConfig): Promise<Buffer> {
+  const image = sharp(sourceBuffer);
+  const metadata = await image.metadata();
+  const sourceWidth = metadata.width ?? 0;
+  const sourceHeight = metadata.height ?? 0;
+
+  if (!sourceWidth || !sourceHeight) {
+    return image.png().toBuffer();
+  }
+
+  const targetRatio = format.width / format.height;
+  const sourceRatio = sourceWidth / sourceHeight;
+
+  let cropWidth = sourceWidth;
+  let cropHeight = sourceHeight;
+
+  if (sourceRatio > targetRatio) {
+    // Source plus large que la cible : on recadre sur la largeur.
+    cropWidth = Math.round(sourceHeight * targetRatio);
+  } else if (sourceRatio < targetRatio) {
+    // Source plus haute que la cible : on recadre sur la hauteur.
+    cropHeight = Math.round(sourceWidth / targetRatio);
+  }
+
+  const left = Math.max(0, Math.round((sourceWidth - cropWidth) / 2));
+  const top = Math.max(0, Math.round((sourceHeight - cropHeight) / 2));
+
+  return image
+    .extract({ left, top, width: cropWidth, height: cropHeight })
+    .resize(format.width, format.height)
+    .png()
+    .toBuffer();
+}
 
 type VisualDirection = {
   profile: string;
@@ -564,6 +620,11 @@ export async function POST(req: NextRequest) {
     const style = formData.get('style') as string;
     const colors = formData.get('colors') as string;
     const description = (formData.get('description') as string ?? '').slice(0, 1500);
+    // Le plan Starter n'a droit qu'au carre -- deja impose cote client, mais
+    // il ne faut jamais faire confiance a une restriction uniquement cote client.
+    const requestedFormat = parseOutputFormat(formData.get('outputFormat'));
+    const outputFormatKey: OutputFormatKey = access.plan === 'starter' ? 'square_1_1' : requestedFormat;
+    const outputFormat = OUTPUT_FORMATS[outputFormatKey];
     const multiReferenceFiles = formData
       .getAll('references')
       .filter((value): value is File => value instanceof File && value.size > 0);
@@ -629,7 +690,7 @@ export async function POST(req: NextRequest) {
         model: 'gpt-image-1',
         image: files,
         prompt: extendedPrompt,
-        size: '1024x1536',
+        size: outputFormat.generationSize,
       });
 
       imageB64 = response.data?.[0]?.b64_json ?? '';
@@ -638,7 +699,7 @@ export async function POST(req: NextRequest) {
       const response = await openai.images.generate({
         model: 'gpt-image-1',
         prompt,
-        size: '1024x1536',
+        size: outputFormat.generationSize,
       });
 
       imageB64 = response.data?.[0]?.b64_json ?? '';
@@ -653,8 +714,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Aucune image générée.' }, { status: 500 });
     }
 
+    stage = 'image_crop';
+    const rawBuffer = Buffer.from(imageB64, 'base64');
+    const buffer = await cropToFormat(rawBuffer, outputFormat);
+
     // Upload l'image vers Vercel Blob
-    const buffer = Buffer.from(imageB64, 'base64');
     const filename = awayTeam
       ? `tifo-${homeTeam}-vs-${awayTeam}-${Date.now()}.png`
       : `tifo-${homeTeam}-${Date.now()}.png`;
@@ -673,7 +737,7 @@ export async function POST(req: NextRequest) {
       // Compatibility fallback: some stores are private-only and reject public uploads.
       if (uploadMessage.includes('cannot use public access on a private store')) {
         stage = 'blob_upload_fallback_data_url';
-        imageUrl = `data:image/png;base64,${imageB64}`;
+        imageUrl = `data:image/png;base64,${buffer.toString('base64')}`;
       } else {
         throw uploadErr;
       }
@@ -695,6 +759,7 @@ export async function POST(req: NextRequest) {
         event_type: eventType || 'match',
         has_away_team: Boolean(awayTeam),
         reference_images_count: referenceFiles.length,
+        output_format: outputFormatKey,
       },
     });
 
