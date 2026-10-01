@@ -21,6 +21,7 @@ export type BlogArticle = BlogArticlePreview & {
   target_keywords: string[];
   prompt: string;
   faq_json: BlogFaqItem[] | null;
+  is_published: boolean;
 };
 
 export async function getPublishedBlogArticles(limit = 50): Promise<BlogArticlePreview[]> {
@@ -36,9 +37,7 @@ export async function getPublishedBlogArticles(limit = 50): Promise<BlogArticleP
   return result.rows;
 }
 
-export async function getPublishedBlogArticleBySlug(slug: string): Promise<BlogArticle | null> {
-  const result = await pool.query(
-    `SELECT
+const ARTICLE_COLUMNS = `
       id,
       title,
       slug,
@@ -50,9 +49,31 @@ export async function getPublishedBlogArticleBySlug(slug: string): Promise<BlogA
       meta_description,
       target_keywords,
       prompt,
-      faq_json
+      faq_json,
+      is_published`;
+
+export async function getPublishedBlogArticleBySlug(slug: string): Promise<BlogArticle | null> {
+  const result = await pool.query(
+    `SELECT ${ARTICLE_COLUMNS}
      FROM blog_articles
      WHERE slug = $1 AND is_published = true
+     LIMIT 1`,
+    [slug]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+/**
+ * Ignore le filtre is_published — reserve a la previsualisation admin
+ * (app/blog/[slug]/page.tsx verifie isAdmin avant d'appeler cette fonction).
+ * Jamais utilisee sur un chemin accessible au public.
+ */
+export async function getAnyBlogArticleBySlugForAdmin(slug: string): Promise<BlogArticle | null> {
+  const result = await pool.query(
+    `SELECT ${ARTICLE_COLUMNS}
+     FROM blog_articles
+     WHERE slug = $1
      LIMIT 1`,
     [slug]
   );

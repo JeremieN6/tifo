@@ -1,18 +1,43 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
 import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/FooterSection';
-import { getPublishedBlogArticleBySlug } from '@/lib/blog';
+import { authOptions } from '@/lib/auth';
+import { getAnyBlogArticleBySlugForAdmin, getPublishedBlogArticleBySlug, type BlogArticle } from '@/lib/blog';
 import { canonicalUrl } from '@/lib/seo';
 
-export const revalidate = 300;
+// Pas de revalidate ici : la resolution verifie la session a chaque requete
+// (previsualisation admin des brouillons), donc la route est de toute facon
+// rendue dynamiquement -- c'est voulu, le trafic du blog est trop faible pour
+// que ca compte, et ca evite qu'un brouillon se retrouve mis en cache public.
+export const dynamic = 'force-dynamic';
 
 type ArticlePageProps = {
   params: {
     slug: string;
   };
 };
+
+async function resolveArticle(slug: string): Promise<{ article: BlogArticle; isDraft: boolean } | null> {
+  const published = await getPublishedBlogArticleBySlug(slug);
+  if (published) {
+    return { article: published, isDraft: false };
+  }
+
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.isAdmin) {
+    return null;
+  }
+
+  const draft = await getAnyBlogArticleBySlugForAdmin(slug);
+  if (!draft) {
+    return null;
+  }
+
+  return { article: draft, isDraft: !draft.is_published };
+}
 
 function formatDate(value: string | null): string {
   if (!value) {
@@ -88,20 +113,23 @@ function renderMarkdownBlocks(markdown: string): JSX.Element[] {
 }
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
-  const article = await getPublishedBlogArticleBySlug(params.slug);
+  const resolved = await resolveArticle(params.slug);
 
-  if (!article) {
+  if (!resolved) {
     return {
       title: 'Article introuvable | Blog Tifo',
     };
   }
 
+  const { article, isDraft } = resolved;
+
   return {
-    title: `${article.title} | Blog Tifo`,
+    title: isDraft ? `[Brouillon] ${article.title} | Blog Tifo` : `${article.title} | Blog Tifo`,
     description: article.meta_description,
     alternates: {
       canonical: canonicalUrl(`/blog/${article.slug}`),
     },
+    robots: isDraft ? { index: false, follow: false } : undefined,
     openGraph: {
       title: article.title,
       description: article.meta_description,
@@ -112,15 +140,22 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
-  const article = await getPublishedBlogArticleBySlug(params.slug);
+  const resolved = await resolveArticle(params.slug);
 
-  if (!article) {
+  if (!resolved) {
     notFound();
   }
+
+  const { article, isDraft } = resolved;
 
   return (
     <div className="min-h-screen bg-[#020f07] text-white">
       <Navbar />
+      {isDraft && (
+        <div className="bg-amber-600/90 px-6 py-2 text-center font-body text-xs font-bold uppercase tracking-[0.18em] text-black">
+          Brouillon — non publié, visible uniquement par toi (admin)
+        </div>
+      )}
       <main className="mx-auto max-w-3xl px-6 pb-16 pt-28 md:px-10">
         <Link href="/blog" className="font-body text-xs uppercase tracking-[0.22em] text-green-400 hover:text-green-300">
           Retour au blog
