@@ -260,6 +260,7 @@ export default function CreatePage() {
   const [step, setStep] = useState(0);
   const [posterType, setPosterType] = useState<'avant-match' | 'apres-match' | 'annonce' | ''>('');
   const [generating, setGenerating] = useState(false);
+  const [generationElapsedSeconds, setGenerationElapsedSeconds] = useState(0);
   const [generatedImage, setGeneratedImage] = useState('');
   const [genError, setGenError] = useState('');
   const [quota, setQuota] = useState<Quota | null>(null);
@@ -487,6 +488,33 @@ export default function CreatePage() {
 
     e.target.value = '';
   }
+
+  useEffect(() => {
+    if (!generating) {
+      setGenerationElapsedSeconds(0);
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setGenerationElapsedSeconds((seconds) => seconds + 1);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [generating]);
+
+  useEffect(() => {
+    if (!generating) {
+      return;
+    }
+
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [generating]);
 
   async function handleGenerate() {
     setGenerating(true);
@@ -1301,6 +1329,22 @@ export default function CreatePage() {
                   </p>
                 )}
 
+                {generating && (
+                  <div
+                    className="px-4 py-3 font-body text-sm text-green-300"
+                    style={{ background: 'rgba(21,128,61,0.15)', border: '1px solid rgba(21,128,61,0.4)' }}
+                  >
+                    <p>
+                      Génération en cours ({generationElapsedSeconds}s)
+                      {data.referenceImages.length > 0 ? ' — peut prendre jusqu\'à 2 à 3 minutes avec des images de référence.' : ' — jusqu\'à une minute environ.'}
+                      {' '}Ne quittez pas cette page et ne rechargez pas pendant ce temps.
+                    </p>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-green-950">
+                      <div className="h-full w-1/3 animate-generation-progress rounded-full bg-green-500" />
+                    </div>
+                  </div>
+                )}
+
                 <button
                   onClick={handleGenerate}
                   disabled={generating}
@@ -1312,7 +1356,7 @@ export default function CreatePage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      Génération en cours… (30s environ)
+                      Génération en cours… ({generationElapsedSeconds}s)
                     </span>
                   ) : (
                     '✦ Générer l\'affiche'
