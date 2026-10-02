@@ -36,6 +36,12 @@ jobs:
           git fetch --all --prune
           git reset --hard origin/main
           npm ci --include=dev
+          # Build propre a chaque deploiement : un .next laisse d'un build
+          # precedent peut garder en cache sur disque une reponse (ex: 404
+          # pour une route alors encore en brouillon) qui ne se perime pas
+          # correctement quand une route change de mode de rendu entre deux
+          # deploiements (ex: ISR -> force-dynamic).
+          rm -rf .next
           npm run build
           if pm2 describe tifo > /dev/null 2>&1; then
             pm2 reload tifo --update-env
