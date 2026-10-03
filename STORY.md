@@ -15,6 +15,8 @@ Le produit est fonctionnel de bout en bout : inscription, generation d'affiches 
 
 Le demarchage actif se fait par cold DM Instagram aupres de clubs amateurs. A date, ce canal a produit des inscriptions mais pas (encore) le premier paiement -- celui-ci est venu d'un canal non sollicite (voir ci-dessous). Les deux canaux restent suivis separement pour ne pas fausser l'attribution.
 
+Depuis le premier paiement, un troisieme canal est en test : une serie de cinq articles de blog au format question-reponse, ecrits pour les dirigeants et benevoles de clubs amateurs, dans l'espoir d'etre cites par les assistants IA. Premiers sondages manuels (2026-10-03) : un seul des cinq themes ressort deja en premiere position, les autres ne sont pas encore cites -- c'est trop tot pour conclure, un nouveau test est prevu environ une semaine plus tard.
+
 ---
 
 ## Historique des pivots
@@ -50,6 +52,16 @@ Le demarchage actif se fait par cold DM Instagram aupres de clubs amateurs. A da
 **Decision** : diagnostiquer avant de corriger au hasard. Cause identifiee en deux temps sur le serveur VPS : d'abord un timeout nginx par defaut (60s, insuffisant pour une generation avec images de reference), puis -- apres un premier test en conditions reelles toujours en echec -- une limite de taille de requete nginx par defaut (1 Mo, trop basse pour un formulaire avec plusieurs images). Les deux corrigees le jour meme. Le client a ensuite ete prevenu par email que l'incident etait resolu, sans entrer dans le detail technique.
 **Resultat** : malgre un premier contact technique rate (le client a paye alors que la quasi-totalite de ses tentatives echouaient), il est revenu consulter son compte le lendemain matin -- signal de confiance preserve malgre le faux depart. Lecon retenue : un visiteur aussi determine que celui-ci est rare ; la plupart des prospects moins motives abandonnent probablement au meme point d'echec, sans jamais remonter dans les metriques.
 
+### [2026-10-02] Parier sur la visibilite dans les reponses des assistants IA, par du contenu utile plutot que par du volume
+**Contexte** : le seul client payant etant venu d'une conversation ChatGPT, l'hypothese a tester etait qu'un contenu precis, structure en questions-reponses, puisse etre repris par ces assistants quand un dirigeant de club amateur cherche comment faire une affiche.
+**Decision** : ecrire a la main cinq articles centres sur de vraies questions de terrain (recruter des joueurs, annoncer un transfert, communiquer sur un tournoi ou une assemblee, choisir le bon format selon le reseau, comparer un outil de modeles et un generateur IA), en restant factuel sur ce que fait et ne fait pas le produit, plutot que de laisser un pipeline automatique produire du texte generique. Les articles sont soumis a l'indexation des moteurs de recherche.
+**Resultat** : trop tot pour juger. Un premier sondage montre un theme (le recrutement) deja en tete et cite, les autres pas encore, face a des concurrents deja installes. Un incident de mise en ligne (nouvelles pages renvoyant une erreur car un ancien cache n'etait pas purge) a retarde l'indexation de quelques jours, et le processus de deploiement a ete corrige pour que cela ne se reproduise pas. Rendez-vous environ une semaine plus tard pour mesurer.
+
+### [2026-10-03] Ne pas confondre l'activite du fondateur et l'interet du marche
+**Contexte** : des alertes automatiques se sont declenchees et, en regardant les donnees, onze demarrages de paiement en trois jours donnaient l'impression d'un interet soudain pour l'abonnement.
+**Decision** : verifier qui se cachait derriere ces chiffres avant de les interpreter. Ces onze demarrages ne correspondaient qu'a deux personnes, dont l'une etait tres probablement le fondateur en train de tester les plans, et l'autre le premier client. En parallele, les alertes de suivi, basees sur des taux, ont ete remplacees par des alertes sur les echecs, car avec si peu de trafic elles se declenchaient simplement les jours sans activite.
+**Resultat** : aucun nouveau signal de marche n'a ete confirme -- le parcours de paiement fonctionne de bout en bout, ce qui est utile, mais ce n'est pas la preuve d'un second prospect. Le suivi reste a affiner (separer proprement les comptes de test) pour que les prochains chiffres soient lisibles sans tri manuel.
+
 ---
 
 ## Ce que la cible attend / a appris
@@ -57,6 +69,8 @@ Le demarchage actif se fait par cold DM Instagram aupres de clubs amateurs. A da
 - Une offre commerciale segmentee (essai gratuit cible) doit rester pilotee manuellement tant que le produit n'a pas de mecanisme d'eligibilite automatique fiable.
 - Le canal d'acquisition le plus efficace n'est pas toujours celui sur lequel on investit le plus activement : verifier l'attribution reelle (analytics) avant d'ecrire une histoire d'acquisition, plutot que de supposer qu'elle vient de l'effort le plus visible.
 - Un visiteur suffisamment convaincu peut payer malgre un produit qui echoue presque systematiquement devant lui -- ce n'est pas une preuve que l'experience est bonne, c'est un signal qu'il ne faut pas perdre les prospects moins determines qui, eux, abandonnent silencieusement au meme endroit.
+- A tres faible volume, un pourcentage ne dit rien : un jour sans activite donne 0 % et declenche de fausses alertes. Surveiller des compteurs d'echecs (« il y a eu un probleme ») est plus utile que surveiller des taux tant que le trafic reste de quelques unites par jour.
+- Les chiffres bruts d'un produit tout neuf melangent les tests du fondateur et les vrais utilisateurs : avant de se rejouir d'une hausse, compter les personnes distinctes.
 
 ---
 
@@ -70,4 +84,6 @@ Le demarchage actif se fait par cold DM Instagram aupres de clubs amateurs. A da
 ---
 
 ## Derniere mise a jour
-2026-10-01 -- Ajout du premier client payant (2026-09-30), correction de l'attribution d'acquisition (canal ChatGPT/lien partage, pas l'outreach Instagram -- verifie via PostHog : utm_source=chatgpt.com, aucun referrer HTTP classique, app mobile iOS) et de l'incident technique nginx de sa premiere session (timeout + limite de taille de requete, corriges le jour meme, client recontacte par email). Dates harmonisees sur le 2026-09-30, date reelle de l'abonnement Stripe (verifiee via l'API Stripe), la reconnexion du 2026-10-01 au matin n'etant qu'une consultation breve du compte.
+2026-10-03 -- Ajout de la strategie d'acquisition par contenu question-reponse (cinq articles, premier sondage encourageant mais inconclusif, retest prevu une semaine plus tard) et de l'analyse du faux signal de paiement (onze demarrages = deux personnes, dont le fondateur en test), avec remplacement des alertes de suivi par des alertes sur les echecs. Aucun chiffre business ajoute.
+
+Precedente mise a jour, 2026-10-01 -- Ajout du premier client payant (2026-09-30), correction de l'attribution d'acquisition (canal ChatGPT/lien partage, pas l'outreach Instagram -- verifie via PostHog : utm_source=chatgpt.com, aucun referrer HTTP classique, app mobile iOS) et de l'incident technique nginx de sa premiere session (timeout + limite de taille de requete, corriges le jour meme, client recontacte par email). Dates harmonisees sur le 2026-09-30, date reelle de l'abonnement Stripe (verifiee via l'API Stripe), la reconnexion du 2026-10-01 au matin n'etant qu'une consultation breve du compte.
