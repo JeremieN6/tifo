@@ -7,6 +7,7 @@ import { put } from '@vercel/blob';
 import OpenAI from 'openai';
 import sharp from 'sharp';
 import { captureServerEvent } from '@/lib/posthog-server';
+import { instrumentOpenAI } from '@/lib/ops-cost';
 
 const MAX_REFERENCE_IMAGES = 3;
 const MAX_REFERENCE_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -507,7 +508,7 @@ function getOpenAIClient(): OpenAI {
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY manquante');
   }
-  return new OpenAI({ apiKey });
+  return instrumentOpenAI(new OpenAI({ apiKey }), 'tifo');
 }
 
 function buildPrompt(data: {

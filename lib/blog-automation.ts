@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import OpenAI from 'openai';
 import pool from './db';
+import { instrumentOpenAI } from './ops-cost';
 
 const WEEKLY_IDEA_INTERVAL_DAYS = 7;
 
@@ -33,7 +34,7 @@ function getOpenAIClient(): OpenAI {
     throw new Error('OPENAI_API_KEY manquante');
   }
 
-  return new OpenAI({ apiKey });
+  return instrumentOpenAI(new OpenAI({ apiKey }), 'tifo');
 }
 
 function getSeedFilePath(): string {
