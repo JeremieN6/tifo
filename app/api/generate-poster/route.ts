@@ -9,13 +9,17 @@ import sharp from 'sharp';
 import { captureServerEvent } from '@/lib/posthog-server';
 import { instrumentOpenAI } from '@/lib/ops-cost';
 
+// Modele d'image OpenAI, surchargeable sans redeploiement de code via OPENAI_IMAGE_MODEL.
+// gpt-image-1 a ete retire de l'API OpenAI (erreur 400 "model does not exist" le 2026-10-28).
+const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2';
+
 const MAX_REFERENCE_IMAGES = 3;
 const MAX_REFERENCE_IMAGE_BYTES = 5 * 1024 * 1024;
 
 type OutputFormatKey = 'square_1_1' | 'story_9_16' | 'x_banner' | 'youtube_thumbnail';
 
 type OutputFormatConfig = {
-  // Taille demandee a gpt-image-1 (le modele ne supporte que ces 3 ratios + 'auto').
+  // Taille demandee au modele d'image (les modeles gpt-image ne supporte que ces 3 ratios + 'auto').
   generationSize: '1024x1024' | '1024x1536' | '1536x1024';
   // Dimensions finales livrees a l'utilisateur, apres recadrage centre.
   width: number;
@@ -480,6 +484,14 @@ function classifyGenerationError(err: unknown, stage: string) {
 
   const isOpenAIStage = stage.startsWith('openai_');
 
+  if (isOpenAIStage && message.includes('model') && (message.includes('does not exist') || message.includes('not found'))) {
+    return {
+      status: 503,
+      reason: 'openai_model_unavailable',
+      userMessage: 'Service de generation temporairement indisponible. Reessayez plus tard ou contactez le support.',
+    };
+  }
+
   if (isOpenAIStage && message.includes('connection')) {
     return {
       status: 503,
@@ -688,7 +700,7 @@ export async function POST(req: NextRequest) {
 
       stage = 'openai_image_edit';
       const response = await openai.images.edit({
-        model: 'gpt-image-1',
+        model: IMAGE_MODEL,
         image: files,
         prompt: extendedPrompt,
         size: outputFormat.generationSize,
@@ -698,7 +710,7 @@ export async function POST(req: NextRequest) {
     } else {
       stage = 'openai_image_generate';
       const response = await openai.images.generate({
-        model: 'gpt-image-1',
+        model: IMAGE_MODEL,
         prompt,
         size: outputFormat.generationSize,
       });
@@ -761,6 +773,7 @@ export async function POST(req: NextRequest) {
         has_away_team: Boolean(awayTeam),
         reference_images_count: referenceFiles.length,
         output_format: outputFormatKey,
+        model: IMAGE_MODEL,
       },
     });
 
@@ -774,12 +787,14 @@ export async function POST(req: NextRequest) {
       properties: {
         reason: classification.reason,
         stage,
+        model: IMAGE_MODEL,
         error_message: toErrorMessage(err).slice(0, 200),
       },
     });
 
     console.error('[generate-poster]', {
       stage,
+      model: IMAGE_MODEL,
       reason: classification.reason,
       message: toErrorMessage(err),
     });
