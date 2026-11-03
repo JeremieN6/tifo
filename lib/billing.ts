@@ -135,6 +135,21 @@ export async function getStripeCustomerIdByUserId(userId: string): Promise<strin
   return result.rows[0]?.stripe_customer_id ?? null;
 }
 
+export async function getUserByStripeCustomerId(
+  stripeCustomerId: string
+): Promise<{ userId: number; email: string; plan: string } | null> {
+  const result = await pool.query(
+    `SELECT u.id AS user_id, u.email, ua.plan
+     FROM user_access ua
+     JOIN users u ON u.id = ua.user_id
+     WHERE ua.stripe_customer_id = $1
+     LIMIT 1`,
+    [stripeCustomerId]
+  );
+  const row = result.rows[0];
+  return row ? { userId: row.user_id, email: row.email, plan: row.plan } : null;
+}
+
 export async function cancelPlan(userId: string): Promise<void> {
   await pool.query(
     `UPDATE user_access
