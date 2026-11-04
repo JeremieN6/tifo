@@ -25,7 +25,7 @@ SaaS Next.js permettant de generer des affiches/posters football (annonces de tr
 
 ## Etat Actuel du Projet
 **Phase** : En production sur VPS, premier client payant (plan Pro, 2026-09-30), phase d'acquisition (blog/GEO + cold DM Instagram)
-**Derniere session** : 2026-10-03
+**Derniere session** : 2026-11-04
 **Progression globale** : 80%
 
 ### Ce qui est fait :
@@ -48,6 +48,8 @@ SaaS Next.js permettant de generer des affiches/posters football (annonces de tr
 - [x] Alertes PostHog refaites (2026-10-03) : les anciennes alertes de taux relatif (`relative_decrease`) se declenchaient chaque jour creux (0/0 = 0 %). Desactivees (reglages conserves) : "Drop checkout > 20%", "Drop activation generation > 25%", "Spike erreurs generation > 40%". Actives, en valeur absolue et quotidiennes : "Echecs generation > 3/jour" (insight `tbODocLH`) et "Echec checkout (>=1/jour)" (insight `gbYic7g1`, cree pour l'occasion)
 
 ### Prochaines etapes :
+- [ ] URGENT : valider `gpt-image-2` par une generation reelle sur le site (aucune generation observee dans PostHog depuis le correctif du 2026-10-28) ; ensuite ecrire aux comptes 15 et 17 (nouveaux inscrits dont la premiere generation a echoue le 2026-10-28)
+- [ ] Verifier que les events PostHog `subscription_payment_failed` / `subscription_ended` arrivent (evenements Stripe `invoice.payment_failed` et `customer.subscription.deleted` ajoutes au webhook le 2026-11-04) et suivre le renouvellement du compte 13
 - [ ] Retester la visibilite GEO vers le 2026-10-10 (requetes ChatGPT/Perplexity : recrutement, mercato/transfert, Canva vs IA, formats) ; a la date du 2026-10-03 seul l'article recrutement ressort en #1, les autres ne sont pas encore cites (concurrents vus : `mon-mercato.fr`, `pippit.ai`)
 - [ ] Verifier le trafic blog venant des canaux IA dans PostHog apres 1 a 2 semaines (ne pas conclure avant)
 - [ ] Couper les mails d'echec de deploiement Vercel (Vercel -> Settings -> Notifications) ; suppression du projet Vercel NON autorisee sans confirmation explicite

@@ -62,6 +62,16 @@ Depuis le premier paiement, un troisieme canal est en test : une serie de cinq a
 **Decision** : verifier qui se cachait derriere ces chiffres avant de les interpreter. Ces onze demarrages ne correspondaient qu'a deux personnes, dont l'une etait tres probablement le fondateur en train de tester les plans, et l'autre le premier client. En parallele, les alertes de suivi, basees sur des taux, ont ete remplacees par des alertes sur les echecs, car avec si peu de trafic elles se declenchaient simplement les jours sans activite.
 **Resultat** : aucun nouveau signal de marche n'a ete confirme -- le parcours de paiement fonctionne de bout en bout, ce qui est utile, mais ce n'est pas la preuve d'un second prospect. Le suivi reste a affiner (separer proprement les comptes de test) pour que les prochains chiffres soient lisibles sans tri manuel.
 
+### [2026-10-28] Une dependance externe disparait sans prevenir, et les premiers inscrits spontanes en font les frais
+**Contexte** : le modele d'IA qui produit les affiches a ete retire par son fournisseur. Pendant plusieurs heures, plus aucune generation ne fonctionnait -- et deux personnes qui venaient de creer leur compte, sans demarchage, ont tente leur toute premiere affiche dans ce creneau.
+**Decision** : traiter d'abord la cause (changement de modele, rendu configurable sans toucher au code), puis rendre ce type de panne lisible (le nom du modele est maintenant trace avec chaque generation, et un modele disparu a sa propre categorie d'erreur) plutot que de se contenter de relancer. Ecrire aux deux personnes concernees avec un message humain, sans detail technique.
+**Resultat** : la panne a ete identifiee et corrigee, mais elle a touche exactement le moment le plus fragile d'un nouvel utilisateur -- la premiere minute. A ce stade aucune generation reussie n'est encore observee depuis le correctif : a verifier avant de considerer l'incident clos.
+
+### [2026-11-02] Premier renouvellement mensuel refuse : un probleme de carte, pas de produit -- et un trou de securite financiere decouvert au passage
+**Contexte** : le premier client payant a vu son renouvellement mensuel refuse par sa banque (fonds insuffisants), deux fois de suite. Le reflexe etait de soupconner le site.
+**Decision** : verifier avant de corriger : le refus venait bien de la banque, pas du produit. En revanche, l'examen a montre que le site ne savait pas reagir a la fin d'un abonnement cote paiement : un client qui resilie ou dont les relances echouent aurait conserve son acces premium sans payer, indefiniment. Ce cas a ete traite le jour meme (retour automatique au plan gratuit a la fin de l'abonnement, acces conserve pendant les relances, suivi des echecs de renouvellement).
+**Resultat** : un incident de paiement isole a revele une lacune qui n'aurait pas ete vue avant plusieurs mois, au premier abonne qui resilie. Lecon : le premier paiement ne prouve pas que le cycle de vie complet d'un abonnement est gere -- c'est le premier renouvellement, la premiere resiliation, qui le prouvent.
+
 ---
 
 ## Ce que la cible attend / a appris
@@ -70,6 +80,8 @@ Depuis le premier paiement, un troisieme canal est en test : une serie de cinq a
 - Le canal d'acquisition le plus efficace n'est pas toujours celui sur lequel on investit le plus activement : verifier l'attribution reelle (analytics) avant d'ecrire une histoire d'acquisition, plutot que de supposer qu'elle vient de l'effort le plus visible.
 - Un visiteur suffisamment convaincu peut payer malgre un produit qui echoue presque systematiquement devant lui -- ce n'est pas une preuve que l'experience est bonne, c'est un signal qu'il ne faut pas perdre les prospects moins determines qui, eux, abandonnent silencieusement au meme endroit.
 - A tres faible volume, un pourcentage ne dit rien : un jour sans activite donne 0 % et declenche de fausses alertes. Surveiller des compteurs d'echecs (« il y a eu un probleme ») est plus utile que surveiller des taux tant que le trafic reste de quelques unites par jour.
+- Un fournisseur d'IA peut retirer un modele du jour au lendemain : rendre le modele configurable et tracer son nom dans les mesures evite de decouvrir la panne par les utilisateurs.
+- Un premier paiement ne prouve pas que l'abonnement est bien gere dans la duree : tester le renouvellement, la resiliation et l'echec de paiement.
 - Les chiffres bruts d'un produit tout neuf melangent les tests du fondateur et les vrais utilisateurs : avant de se rejouir d'une hausse, compter les personnes distinctes.
 
 ---
@@ -84,6 +96,8 @@ Depuis le premier paiement, un troisieme canal est en test : une serie de cinq a
 ---
 
 ## Derniere mise a jour
-2026-10-03 -- Ajout de la strategie d'acquisition par contenu question-reponse (cinq articles, premier sondage encourageant mais inconclusif, retest prevu une semaine plus tard) et de l'analyse du faux signal de paiement (onze demarrages = deux personnes, dont le fondateur en test), avec remplacement des alertes de suivi par des alertes sur les echecs. Aucun chiffre business ajoute.
+2026-11-04 -- Ajout de la panne du modele d'image (2026-10-28, deux nouveaux inscrits touches, correctif a valider par une generation reelle) et du premier renouvellement refuse par la banque du client payant, qui a revele l'absence de gestion de fin d'abonnement (corrigee). Aucun chiffre business precis ajoute.
+
+Precedente mise a jour, 2026-10-03 -- Ajout de la strategie d'acquisition par contenu question-reponse (cinq articles, premier sondage encourageant mais inconclusif, retest prevu une semaine plus tard) et de l'analyse du faux signal de paiement (onze demarrages = deux personnes, dont le fondateur en test), avec remplacement des alertes de suivi par des alertes sur les echecs. Aucun chiffre business ajoute.
 
 Precedente mise a jour, 2026-10-01 -- Ajout du premier client payant (2026-09-30), correction de l'attribution d'acquisition (canal ChatGPT/lien partage, pas l'outreach Instagram -- verifie via PostHog : utm_source=chatgpt.com, aucun referrer HTTP classique, app mobile iOS) et de l'incident technique nginx de sa premiere session (timeout + limite de taille de requete, corriges le jour meme, client recontacte par email). Dates harmonisees sur le 2026-09-30, date reelle de l'abonnement Stripe (verifiee via l'API Stripe), la reconnexion du 2026-10-01 au matin n'etant qu'une consultation breve du compte.
