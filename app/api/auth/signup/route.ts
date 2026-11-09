@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPublicOrigin } from '@/lib/app-url';
 import { createUser } from '@/lib/users';
 import pool from '@/lib/db';
 import { captureServerEvent } from '@/lib/posthog-server';
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
     const user = await createUser(email, password, name);
 
     try {
-      const appUrl = req.nextUrl.origin;
+      const appUrl = getPublicOrigin(req);
       await sendEmail({
         to: user.email,
         subject: 'Bienvenue sur Tifo',

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPublicOrigin, publicUrl } from '@/lib/app-url';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createCheckoutSession, getStripeClient, resolveOrCreateStripeCustomer, type PaidPlan } from '@/lib/stripe';
@@ -7,7 +8,7 @@ import { captureServerEvent } from '@/lib/posthog-server';
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return NextResponse.redirect(new URL('/auth/login', req.url));
+    return NextResponse.redirect(publicUrl(req, '/auth/login'));
   }
 
   const rawPlan = req.nextUrl.searchParams.get('plan');
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
       stripe,
       customerId,
       rawPlan as PaidPlan,
-      req.nextUrl.origin,
+      getPublicOrigin(req),
       session.user.id
     );
 

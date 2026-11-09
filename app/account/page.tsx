@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Navbar from '@/components/Navbar';
-import Link from 'next/link';
 
 interface Quota {
   plan: string;
@@ -283,12 +282,12 @@ export default function AccountPage() {
                         <li key={f} className="font-body text-[10px] text-slate-400">• {f}</li>
                       ))}
                     </ul>
-                    <Link
+                    <a
                       href="/api/stripe/checkout?plan=pro"
                       className="block w-full bg-green-700 py-2 text-center font-body text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
                     >
                       Passer sur Pro
-                    </Link>
+                    </a>
                   </div>
                   <div className="p-4" style={{ background: 'rgba(5,46,22,0.2)', border: '1px solid rgba(22,163,74,0.2)' }}>
                     <div className="mb-2 flex items-center justify-between">
@@ -300,12 +299,12 @@ export default function AccountPage() {
                         <li key={f} className="font-body text-[10px] text-slate-400">• {f}</li>
                       ))}
                     </ul>
-                    <Link
+                    <a
                       href="/api/stripe/checkout?plan=club"
                       className="block w-full bg-green-700 py-2 text-center font-body text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
                     >
                       Passer sur Club
-                    </Link>
+                    </a>
                   </div>
                 </div>
                 <p className="mt-3 font-body text-[10px] uppercase tracking-[0.15em] text-slate-600">
@@ -315,12 +314,17 @@ export default function AccountPage() {
             )}
 
             {(quota?.plan === 'pro' || quota?.plan === 'club') && (
-              <Link
-                href="/api/account/customer-portal"
-                className="mt-4 inline-block font-body text-xs text-green-700 hover:text-red-400 transition-colors"
-              >
-                Gérer mon abonnement et mon moyen de paiement
-              </Link>
+              <div className="mt-5">
+                <a
+                  href="/api/account/customer-portal"
+                  className="block w-full border border-green-600 py-2.5 text-center font-body text-[10px] font-black uppercase tracking-[0.15em] text-green-500 transition-colors hover:bg-green-700 hover:text-white"
+                >
+                  Gérer mon abonnement et mon moyen de paiement
+                </a>
+                <p className="mt-2 font-body text-[10px] text-slate-500">
+                  Changer de carte, consulter vos factures ou résilier, en toute sécurité via Stripe.
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -334,12 +338,12 @@ export default function AccountPage() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display text-2xl uppercase text-white">Historique de facturation</h2>
-              <Link
+              <a
                 href="/api/account/invoice"
                 className="bg-green-700 px-4 py-2 font-body text-[10px] font-black uppercase tracking-[0.15em] text-white hover:bg-green-600 transition-colors"
               >
                 Télécharger ma facture
-              </Link>
+              </a>
             </div>
           </div>
 

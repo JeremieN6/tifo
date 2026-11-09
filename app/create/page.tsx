@@ -1310,12 +1310,12 @@ export default function CreatePage() {
                       <p className="font-body text-xs text-slate-400">
                         Le plan Starter inclut uniquement le format carré (1:1).
                       </p>
-                      <Link
+                      <a
                         href="/api/stripe/checkout?plan=pro"
                         className="inline-flex items-center justify-center bg-green-700 px-4 py-2 font-body text-[10px] font-black uppercase tracking-[0.16em] text-white hover:bg-green-600 transition-colors"
                       >
                         Débloquer tous les formats (Pro)
-                      </Link>
+                      </a>
                     </div>
                   )}
                 </div>
