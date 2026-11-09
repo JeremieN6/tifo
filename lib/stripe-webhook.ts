@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { cancelPlan, getUserByStripeCustomerId, setStripeCustomerId, upgradePlan } from '@/lib/billing';
-import { captureServerEvent } from '@/lib/posthog-server';
+import { captureServerEvent, captureServerEventImmediate } from '@/lib/posthog-server';
 
 export async function handleStripeWebhook(req: NextRequest) {
   try {
@@ -127,7 +127,7 @@ async function handleSubscriptionEnded(stripe: Stripe, subscription: Stripe.Subs
     await cancelPlan(String(user.userId));
   }
 
-  captureServerEvent({
+  await captureServerEventImmediate({
     distinctId: String(user.userId),
     event: 'subscription_ended',
     properties: {
@@ -144,8 +144,9 @@ async function handleSubscriptionEnded(stripe: Stripe, subscription: Stripe.Subs
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = customerIdOf(invoice.customer);
   const user = customerId ? await getUserByStripeCustomerId(customerId) : null;
+  console.info('[webhook/stripe] invoice.payment_failed', { customerId, userFound: Boolean(user), attempt: invoice.attempt_count });
 
-  captureServerEvent({
+  await captureServerEventImmediate({
     distinctId: user ? String(user.userId) : customerId ?? 'unknown_stripe_customer',
     event: 'subscription_payment_failed',
     properties: {

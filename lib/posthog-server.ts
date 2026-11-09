@@ -35,3 +35,29 @@ export function captureServerEvent(params: {
     console.error('[posthog/server]', err);
   }
 }
+
+// Variante qui attend l'envoi effectif a PostHog. A reserver aux evenements rares et
+// importants emis depuis une reponse courte (webhooks) : captureServerEvent met
+// l'evenement en file d'attente et l'envoie plus tard, ce qui peut se perdre.
+export async function captureServerEventImmediate(params: {
+  distinctId: string;
+  event: string;
+  properties?: ServerEventProperties;
+}) {
+  const client = getPostHogServerClient();
+  if (!client) {
+    console.warn('[posthog/server] cle PostHog absente, evenement non envoye:', params.event);
+    return;
+  }
+
+  try {
+    await client.captureImmediate({
+      distinctId: params.distinctId,
+      event: params.event,
+      properties: params.properties,
+    });
+  } catch (err) {
+    console.error('[posthog/server]', params.event, err);
+  }
+}
+
