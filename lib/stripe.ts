@@ -29,6 +29,19 @@ export function getStripeClient() {
   });
 }
 
+async function customerExistsInStripe(stripe: Stripe, customerId: string): Promise<boolean> {
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    return !('deleted' in customer && customer.deleted);
+  } catch (err) {
+    if (err instanceof Stripe.errors.StripeInvalidRequestError && err.code === 'resource_missing') {
+      console.warn('[stripe] client enregistre introuvable chez Stripe, il sera recree:', customerId);
+      return false;
+    }
+    throw err;
+  }
+}
+
 export async function resolveOrCreateStripeCustomer(
   stripe: Stripe,
   userId: string
@@ -39,9 +52,11 @@ export async function resolveOrCreateStripeCustomer(
   }
 
   const storedCustomerId = await getStripeCustomerIdByUserId(userId);
-  if (storedCustomerId) {
+  if (storedCustomerId && (await customerExistsInStripe(stripe, storedCustomerId))) {
     return { customerId: storedCustomerId, email };
   }
+  // Sinon : identifiant absent, ou issu d'un autre mode Stripe (ex: client cree en mode test
+  // puis cle de production) -> on retrouve ou on recree le client et on met la base a jour.
 
   const existingCustomers = await stripe.customers.list({ email, limit: 1 });
   if (existingCustomers.data.length > 0) {
