@@ -31,6 +31,7 @@ export default function AccountPage() {
   const [pwdMsg, setPwdMsg] = useState('');
   const [pwdError, setPwdError] = useState('');
   const [pwdLoading, setPwdLoading] = useState(false);
+  const [billingNotice, setBillingNotice] = useState('');
   const trialEndsAt = quota?.trial_ends_at ? new Date(quota.trial_ends_at) : null;
   const trialEndsAtLabel = trialEndsAt
     ? trialEndsAt.toLocaleDateString('fr-FR', {
@@ -39,6 +40,17 @@ export default function AccountPage() {
         year: 'numeric',
       })
     : null;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('portal') === 'error') {
+      setBillingNotice("Impossible d'ouvrir la gestion de l'abonnement pour le moment. Réessayez dans quelques instants ou répondez à l'un de nos e-mails, nous vous aidons rapidement.");
+    } else if (params.get('invoice') === 'not-found') {
+      setBillingNotice("Aucune facture disponible pour l'instant.");
+    } else if (params.get('invoice') === 'error') {
+      setBillingNotice('Impossible de récupérer votre facture pour le moment. Réessayez dans quelques instants.');
+    }
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -86,6 +98,11 @@ export default function AccountPage() {
     <div className="min-h-screen bg-[#020f07]">
       <Navbar />
       <main className="mx-auto max-w-6xl px-6 pb-16 pt-28 md:px-12">
+        {billingNotice && (
+          <div className="mb-6 border border-amber-600/60 bg-amber-950/40 px-4 py-3 font-body text-sm text-amber-200" role="alert">
+            {billingNotice}
+          </div>
+        )}
 
         {/* Hero card */}
         <div className="mb-8 p-8 md:p-10" style={{ background: 'rgba(5,46,22,0.15)', border: '1px solid rgba(22,163,74,0.2)' }}>
