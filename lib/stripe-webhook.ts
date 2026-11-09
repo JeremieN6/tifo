@@ -25,8 +25,20 @@ export async function handleStripeWebhook(req: NextRequest) {
     const rawBody = await req.text();
     const event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
 
+    console.info('[webhook/stripe] evenement recu:', event.type, event.id);
+
     if (event.type === 'customer.subscription.deleted') {
-      await handleSubscriptionDeleted(stripe, event.data.object as Stripe.Subscription);
+      await handleSubscriptionEnded(stripe, event.data.object as Stripe.Subscription);
+      return NextResponse.json({ received: true });
+    }
+
+    // Selon le reglage Stripe de fin de relances, l'abonnement peut passer en
+    // "unpaid" (ou "incomplete_expired") sans jamais etre supprime : meme traitement.
+    if (event.type === 'customer.subscription.updated') {
+      const subscription = event.data.object as Stripe.Subscription;
+      if (subscription.status === 'unpaid' || subscription.status === 'incomplete_expired') {
+        await handleSubscriptionEnded(stripe, subscription);
+      }
       return NextResponse.json({ received: true });
     }
 
@@ -90,9 +102,9 @@ function customerIdOf(customer: string | Stripe.Customer | Stripe.DeletedCustome
   return typeof customer === 'string' ? customer : customer.id;
 }
 
-// Fin d'abonnement cote Stripe (resiliation via le portail client, ou annulation
-// apres echec des relances de paiement) : on repasse le compte en Starter.
-async function handleSubscriptionDeleted(stripe: Stripe, subscription: Stripe.Subscription) {
+// Fin d'abonnement cote Stripe (resiliation via le portail client, annulation ou
+// passage en impayé apres echec des relances de paiement) : on repasse le compte en Starter.
+async function handleSubscriptionEnded(stripe: Stripe, subscription: Stripe.Subscription) {
   const customerId = customerIdOf(subscription.customer);
   if (!customerId) return;
 
@@ -122,6 +134,7 @@ async function handleSubscriptionDeleted(stripe: Stripe, subscription: Stripe.Su
       previous_plan: previousPlan,
       downgraded: previousPlan === 'pro' || previousPlan === 'club',
       cancellation_reason: subscription.cancellation_details?.reason ?? null,
+      stripe_status: subscription.status,
     },
   });
 }

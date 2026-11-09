@@ -319,7 +319,7 @@ export default function AccountPage() {
                 href="/api/account/customer-portal"
                 className="mt-4 inline-block font-body text-xs text-green-700 hover:text-red-400 transition-colors"
               >
-                Annuler mon abonnement
+                Gérer mon abonnement et mon moyen de paiement
               </Link>
             )}
           </div>
