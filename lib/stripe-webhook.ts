@@ -42,6 +42,11 @@ export async function handleStripeWebhook(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    if (event.type === 'invoice.paid') {
+      await handleInvoicePaid(event.data.object as Stripe.Invoice);
+      return NextResponse.json({ received: true });
+    }
+
     if (event.type === 'invoice.payment_failed') {
       await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
       return NextResponse.json({ received: true });
@@ -160,3 +165,30 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     },
   });
 }
+
+// Facture reglee. Le premier paiement (subscription_create) est deja suivi par
+// checkout.session.completed -> subscription_activated : on ne trace ici que les
+// renouvellements, y compris ceux qui aboutissent apres des relances echouees.
+async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  if (invoice.billing_reason !== 'subscription_cycle') return;
+
+  const customerId = customerIdOf(invoice.customer);
+  const user = customerId ? await getUserByStripeCustomerId(customerId) : null;
+  console.info('[webhook/stripe] invoice.paid (renouvellement)', {
+    customerId,
+    userFound: Boolean(user),
+    attempt: invoice.attempt_count,
+  });
+
+  await captureServerEventImmediate({
+    distinctId: user ? String(user.userId) : customerId ?? 'unknown_stripe_customer',
+    event: 'subscription_renewed',
+    properties: {
+      plan: user?.plan ?? null,
+      amount: invoice.amount_paid,
+      attempt_count: invoice.attempt_count,
+      recovered_after_failure: (invoice.attempt_count ?? 1) > 1,
+    },
+  });
+}
+
