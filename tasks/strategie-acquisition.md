@@ -26,6 +26,10 @@ Limites : très petit échantillon, tests éventuels du propriétaire, signaux i
 
 **Questionnaire dans le produit :** une fenêtre (popup) **après la première génération réussie**, avec un remerciement à la fin. Jamais bloquante, fermable, affichée une seule fois par compte. Seulement pour les comptes créés **après** la mise en ligne (le client actuel n'est pas sollicité).
 
+**Principe : on garde les deux signaux, on ne tranche pas automatiquement.** La source mesurée (UTM, site de provenance) et la source déclarée (réponse à la question) sont toutes les deux conservées, en base et dans PostHog. Quand elles diffèrent, ce n'est pas une erreur à écarter : c'est une information à lire au cas par cas (ex : lien ChatGPT mais réponse « un proche » = recommandation reprise dans ChatGPT, ou personne qui est passée par plusieurs canaux). Le tableau « Source mesurée et source déclarée, côte à côte » du tableau de bord PostHog existe pour ça.
+
+**Comptes de test** : ils sont supprimés de la base et exclus des graphiques PostHog par une liste d'identifiants (`distinct_id NOT IN ('18')`, en tête de chaque requête du tableau de bord). Ajouter les identifiants des futurs comptes de test à cette liste. Le compte n°18 (test du 2026-11-12) est supprimé.
+
 ## 3. Étape 1 : mesurer (à développer, rien de visible avant la première génération)
 
 1. **Capture first-touch** : un petit script mémorise à la première visite (cookie ou stockage local) l'UTM, le domaine de provenance, la page d'arrivée et l'appareil, puis les envoie avec le formulaire d'inscription. Enregistrement en base (nouvelle table `user_attribution`).
