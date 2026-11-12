@@ -5,6 +5,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Un seul deploiement a la fois : deux builds simultanes dans le meme dossier du VPS
+# se marchent dessus (ENOTEMPTY sur .next/export, build casse ou incoherent).
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 env:
   REMOTE_DIR: /srv/saas/tifo
 
