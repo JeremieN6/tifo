@@ -1,6 +1,6 @@
 # Stratégie d'acquisition : comprendre d'où viennent les clients et en trouver d'autres
 
-> Créé le 2026-11-12. Statut : étape 1 validée, pas encore développée. Étapes 2 et 3 planifiées.
+> Créé le 2026-11-12. Statut : **étape 1 développée et déployée le 2026-11-12** (tables `user_attribution` et `acquisition_survey` créées sur Neon, voir `db/acquisition.sql`). Étapes 2 et 3 planifiées.
 > Garde-fou : un seul client payant. Rien de ce document n'est une statistique. Ne jamais nommer ni décrire le client dans `STORY.md`.
 
 ## 1. Constat (données PostHog + test ChatGPT du 2026-11-12)
@@ -59,6 +59,14 @@ Un **e-mail personnel de Jérémie** avec un **lien unique** vers une page de qu
   5. quel format d'affiche foot pour Instagram story
 - **Page d'accueil** (c'est elle que ChatGPT lit) : mettre en avant la réponse à l'objection « même style chaque semaine » : images de référence (style, palette, composition) + logos auto-remplis. Vérifier la cohérence de la page avec les formats réellement proposés (la section fonctionnalités cite une « bannière Facebook » qui n'existe pas).
 - Le blog reste un second levier, sans l'étendre avant les réponses de l'étape 2.
+
+## 5 bis. Points à reprendre dans le plan (relevés pendant le développement de l'étape 1)
+
+1. **Consentement (RGPD / CNIL)** : la capture d'origine utilise le stockage local du navigateur, et PostHog dépose déjà ses propres traceurs, sans bandeau de consentement sur le site. À trancher : bandeau, ou mention claire dans une politique de confidentialité, ou PostHog en mode sans stockage persistant. À valider avant de développer l'étape 2 (données personnelles : réponses libres).
+2. **Navigateur intégré de l'application ChatGPT** : le lien s'ouvre dans un navigateur intégré dont le stockage peut être séparé de celui de Safari ou Chrome. Si la personne revient plus tard par un autre navigateur, l'origine mesurée sera « directe » alors qu'elle venait de ChatGPT. C'est justement la raison de garder la question déclarative : **on croise la source mesurée et la source déclarée**.
+3. **Les comptes qui ne génèrent jamais (ou dont la génération échoue)** ne voient jamais la question : l'attribution mesurée est donc la seule donnée pour eux.
+4. **Comptes de test** : les comptes admin ne reçoivent jamais la fenêtre. Les comptes de test non admin la recevront : à marquer comme internes dans PostHog et à ignorer dans les réponses.
+5. **Étape 2** : la formulation « Qu'avez-vous demandé à {source} ? » dépend de la réponse à la question « Où avez-vous connu Tifo ? » : à ne poser que si la source déclarée est connue.
 
 ## 6. Calendrier
 

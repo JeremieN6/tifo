@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Bebas_Neue, Barlow } from 'next/font/google';
 import './globals.css';
 import SessionProvider from '@/components/SessionProvider';
+import FirstTouchTracker from '@/components/FirstTouchTracker';
 import { getSiteUrl } from '@/lib/seo';
 
 const bebasNeue = Bebas_Neue({
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${bebasNeue.variable} ${barlow.variable}`}>
       <body>
+        <FirstTouchTracker />
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

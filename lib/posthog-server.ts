@@ -1,6 +1,8 @@
 import { PostHog } from 'posthog-node';
 
-type ServerEventProperties = Record<string, string | number | boolean | null | undefined>;
+type ServerEventValue = string | number | boolean | null | undefined;
+// `$set` (proprietes de la personne) est un objet ; les autres proprietes sont des valeurs simples.
+type ServerEventProperties = Record<string, ServerEventValue | Record<string, ServerEventValue>>;
 
 let posthogServerClient: PostHog | null = null;
 

@@ -4,10 +4,11 @@ import { createUser } from '@/lib/users';
 import pool from '@/lib/db';
 import { captureServerEvent } from '@/lib/posthog-server';
 import { buildSignupWelcomeEmail, sendEmail } from '@/lib/email';
+import { attributionSource, saveAttribution, type Attribution } from '@/lib/acquisition';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, name } = await req.json();
+    const { email, password, name, attribution: rawAttribution } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email et mot de passe requis.' }, { status: 400 });
@@ -42,10 +43,26 @@ export async function POST(req: NextRequest) {
       console.error('[signup/welcome-email]', emailError);
     }
 
+    // Origine du visiteur (first-touch) : ne doit jamais empecher l'inscription.
+    let attribution: Attribution | null = null;
+    try {
+      attribution = await saveAttribution(user.id, rawAttribution);
+    } catch (attributionError) {
+      console.error('[signup/attribution]', attributionError);
+    }
+
     captureServerEvent({
       distinctId: user.id,
       event: 'signup_succeeded',
-      properties: { has_name: Boolean(name) },
+      properties: {
+        has_name: Boolean(name),
+        acquisition_source: attribution ? attributionSource(attribution) : 'unknown',
+        utm_source: attribution?.utmSource,
+        referrer_domain: attribution?.referrerDomain,
+        landing_path: attribution?.landingPath,
+        device_type: attribution?.deviceType,
+        $set: { acquisition_source: attribution ? attributionSource(attribution) : 'unknown' },
+      },
     });
     return NextResponse.json({ success: true, userId: user.id }, { status: 201 });
   } catch (err) {

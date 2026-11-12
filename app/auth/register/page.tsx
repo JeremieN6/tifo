@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
+import { readFirstTouch } from '@/lib/first-touch';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { captureClientEvent } from '@/lib/analytics-client';
@@ -27,7 +28,7 @@ export default function RegisterPage() {
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, attribution: readFirstTouch() }),
     });
 
     const data = await res.json();

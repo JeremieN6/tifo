@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
+import AcquisitionSurveyModal from '@/components/AcquisitionSurveyModal';
 import { captureClientEvent } from '@/lib/analytics-client';
 
 // Types
@@ -262,6 +263,7 @@ export default function CreatePage() {
   const [generating, setGenerating] = useState(false);
   const [generationElapsedSeconds, setGenerationElapsedSeconds] = useState(0);
   const [generatedImage, setGeneratedImage] = useState('');
+  const [showSurvey, setShowSurvey] = useState(false);
   const [genError, setGenError] = useState('');
   const [quota, setQuota] = useState<Quota | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<(typeof POSTER_FORMATS)[number]['key']>('square_1_1');
@@ -581,6 +583,26 @@ export default function CreatePage() {
     }
   }
 
+  // Question "Où avez-vous connu Tifo ?" : proposée une seule fois, quelques secondes après la
+  // première affiche réussie, et seulement si le compte y est éligible (vérifié côté serveur).
+  useEffect(() => {
+    if (step !== 5 || !generatedImage) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/acquisition-survey');
+        const json = await res.json();
+        if (!cancelled && json.eligible) setShowSurvey(true);
+      } catch {
+        // la question est facultative : en cas d'erreur on ne la montre pas
+      }
+    }, 3500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [step, generatedImage]);
+
   function downloadImage() {
     captureClientEvent('poster_downloaded', {
       poster_type: posterType || 'unknown',
@@ -641,6 +663,7 @@ export default function CreatePage() {
 
   return (
     <div className="min-h-screen bg-[#020f07]">
+      {showSurvey && <AcquisitionSurveyModal onClose={() => setShowSurvey(false)} />}
       <Navbar createStep={{ current: step < 5 ? step : 4, total: TOTAL_STEPS }} />
       <CreateStepBar current={step < 5 ? step : 4} />
 
