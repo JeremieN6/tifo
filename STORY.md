@@ -72,6 +72,11 @@ Depuis le premier paiement, un troisieme canal est en test : une serie de cinq a
 **Decision** : verifier avant de corriger : le refus venait bien de la banque, pas du produit. En revanche, l'examen a montre que le site ne savait pas reagir a la fin d'un abonnement cote paiement : un client qui resilie ou dont les relances echouent aurait conserve son acces premium sans payer, indefiniment. Ce cas a ete traite le jour meme (retour automatique au plan gratuit a la fin de l'abonnement, acces conserve pendant les relances, suivi des echecs de renouvellement).
 **Resultat** : un incident de paiement isole a revele une lacune qui n'aurait pas ete vue avant plusieurs mois, au premier abonne qui resilie. Lecon : le premier paiement ne prouve pas que le cycle de vie complet d'un abonnement est gere -- c'est le premier renouvellement, la premiere resiliation, qui le prouvent.
 
+### [2026-11-10] Le premier renouvellement a fini par passer, apres plusieurs refus de la banque
+**Contexte** : le premier client payant a vu son premier renouvellement mensuel refuse a plusieurs reprises par sa banque (fonds insuffisants), pendant dix jours. Rien ne venait du produit, mais le doute a ete reel : un refus de paiement ressemble, de l'exterieur, a un bug.
+**Decision** : verifier d'abord que le probleme ne venait pas du site, laisser les relances automatiques du prestataire de paiement faire leur travail, ecrire un message sobre et sans reproche au client, et s'assurer que la fin de relances annule l'abonnement plutot que de le laisser actif sans paiement.
+**Resultat** : a la sixieme tentative le paiement est passe et l'abonnement est redevenu actif. C'est le premier renouvellement reussi : le cycle complet (souscription, echec, relance, recuperation) a ete observe de bout en bout avec un vrai client. A ne pas generaliser : un seul client, une seule carte.
+
 ---
 
 ## Ce que la cible attend / a appris
@@ -96,7 +101,9 @@ Depuis le premier paiement, un troisieme canal est en test : une serie de cinq a
 ---
 
 ## Derniere mise a jour
-2026-11-04 -- Ajout de la panne du modele d'image (2026-10-28, deux nouveaux inscrits touches, correctif a valider par une generation reelle) et du premier renouvellement refuse par la banque du client payant, qui a revele l'absence de gestion de fin d'abonnement (corrigee). Aucun chiffre business precis ajoute.
+2026-11-12 -- Ajout du premier renouvellement mensuel reussi apres plusieurs refus bancaires (aucun chiffre ni identite de client ajoutes).
+
+Precedente mise a jour, 2026-11-04 -- Ajout de la panne du modele d'image (2026-10-28, deux nouveaux inscrits touches, correctif a valider par une generation reelle) et du premier renouvellement refuse par la banque du client payant, qui a revele l'absence de gestion de fin d'abonnement (corrigee). Aucun chiffre business precis ajoute.
 
 Precedente mise a jour, 2026-10-03 -- Ajout de la strategie d'acquisition par contenu question-reponse (cinq articles, premier sondage encourageant mais inconclusif, retest prevu une semaine plus tard) et de l'analyse du faux signal de paiement (onze demarrages = deux personnes, dont le fondateur en test), avec remplacement des alertes de suivi par des alertes sur les echecs. Aucun chiffre business ajoute.
 
