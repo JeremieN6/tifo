@@ -54,7 +54,7 @@ SaaS Next.js permettant de generer des affiches/posters football (annonces de tr
 - [ ] Etape 2 (mi-decembre) : e-mail + lien unique `/avis/<jeton>` ; etape 3 : test hebdomadaire ChatGPT dans `tasks/geo-tests/`. Trancher d'abord le consentement (RGPD), voir `tasks/strategie-acquisition.md` section 5 bis.
 - [ ] Retester la visibilite GEO vers le 2026-10-10 (requetes ChatGPT/Perplexity : recrutement, mercato/transfert, Canva vs IA, formats) ; a la date du 2026-10-03 seul l'article recrutement ressort en #1, les autres ne sont pas encore cites (concurrents vus : `mon-mercato.fr`, `pippit.ai`)
 - [ ] Verifier le trafic blog venant des canaux IA dans PostHog apres 1 a 2 semaines (ne pas conclure avant)
-- [ ] Couper les mails d'echec de deploiement Vercel (Vercel -> Settings -> Notifications) ; suppression du projet Vercel NON autorisee sans confirmation explicite
+- [x] 2026-11-13 : depot Git deconnecte du projet Vercel `tifo` (Vercel -> Settings -> Git -> Disconnect) : plus de builds, de croix rouge GitHub ni de mails d'echec. NE PAS supprimer le projet ni le compte Vercel : Vercel Blob y stocke les images des affiches (`BLOB_READ_WRITE_TOKEN`). Reste : remplacer le lien "About" du depot GitHub (`tifo-five.vercel.app`) par `https://tifo.sassify.fr`.
 - [ ] Marquer les comptes de test (dont celui du proprietaire) comme internes dans PostHog pour que les chiffres checkout/generation soient exploitables sans tri manuel
 - [ ] Tester 10 generations transfert pour valider la non-repetition visuelle
 - [ ] Creer les dashboards PostHog (`tasks/posthog-dashboard-setup.md`) en retirant du blueprint les alertes de taux relatif
